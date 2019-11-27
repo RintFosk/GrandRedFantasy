@@ -69,3 +69,5 @@ $(function(){
     
 
 });
+
+console.log("can this script fucking load");
