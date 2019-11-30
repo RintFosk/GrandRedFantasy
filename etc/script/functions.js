@@ -68,7 +68,7 @@ $(function(){
 
     $("#roll_dice_button").click(function(){
         num = getRNG(6) + 1;
-        document.getElementById("output").innerHTML = deck;
+        document.getElementById("output").innerHTML = num;
     });
 
     
