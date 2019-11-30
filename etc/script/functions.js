@@ -31,9 +31,10 @@ function randomDeckGen(json, is_side_restricted = 0){
 }
 
 $(function(){
+    let deck = "";
     $("#gen_button1").click(function(){
         $.getJSON("etc/data/majsoul_result.json", function(json){
-            let deck = randomDeckGen(json);
+            deck = randomDeckGen(json);
             document.getElementById("output").innerHTML = deck;
         });
     });
@@ -41,7 +42,7 @@ $(function(){
 
     $("#gen_button2").click(function(){
         $.getJSON("etc/data/majsoul_result.json", function(json){
-            let deck = randomDeckGen(json) + 
+            deck = randomDeckGen(json) + 
             "<br>" + randomDeckGen(json) + 
             "<br>" + randomDeckGen(json);
             document.getElementById("output").innerHTML = deck;
@@ -51,7 +52,7 @@ $(function(){
     
     $("#gen_button3").click(function(){
         $.getJSON("etc/data/majsoul_result.json", function(json){
-            let deck = randomDeckGen(json) + 
+            deck = randomDeckGen(json) + 
             "<br>" + randomDeckGen(json) + 
             "<br>" + randomDeckGen(json) + 
             "<br>" + randomDeckGen(json) + 
@@ -73,3 +74,5 @@ $(function(){
     
 
 });
+
+console.log("can this script fucking load");
