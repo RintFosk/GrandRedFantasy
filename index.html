@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
   <head>
+    <!-- Importing the needed JS libraries -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="etc/script/functions.js"></script>
     <meta charset="utf-8">
@@ -9,6 +10,7 @@
   <body>
     <button id="roll_dice_button">掷骰子</button>
     <br>
+    <!-- 只有心理作用的可选项 -->
     <label class="switch">
       REDFOR
       <input type="checkbox">
@@ -20,9 +22,11 @@
       <span class="slider"></span>
     </label>
     <br>
+    <!-- Main Buttons -->
     <button id="gen_button1">单抽</button>
     <button id="gen_button2">三连</button>
     <button id="gen_button3">十连！</button>
+    <!-- Field reserved for the deck output -->
     <p id="output"> </p>
   </body>
 </html>
