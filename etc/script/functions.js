@@ -59,8 +59,21 @@ $(function() {
      * Mainly used for button interaction
      */
 
-	// Initialize deck
+	// Initializing variables
 	let deck = '';
+	let side_restriction = 0;
+
+	// check the states of the side restriction toggle switch
+	$('#tgSwitch_blufor').on('change', function() {
+		if ($(this).is(':checked')) {
+			side_restriction = $(this).is(':checked');
+			alert(switchStatus); // To verify
+		}
+		else {
+			side_restriction = $(this).is(':checked');
+			alert(switchStatus); // To verify
+		}
+	});
 
 	// different button yield different number of random deck
 	$('#gen_button1').click(function() {
