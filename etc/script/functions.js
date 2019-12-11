@@ -1,4 +1,4 @@
-const side = {
+const sideENUM = {
 	ALL_SIDE : 0,
 	BLUFOR   : 1,
 	REDFOR   : 2
@@ -11,7 +11,7 @@ function getRNG(max) {
 	return Math.floor(Math.random() * max) + 1;
 }
 
-function randomDeckGen(json, side_restriction = side.ALL_SIDE) {
+function randomDeckGen(json, side_restriction = sideENUM.ALL_SIDE) {
 	/**
      * Generate a random deck combination, faction side restriction is false by default
      */
@@ -21,7 +21,7 @@ function randomDeckGen(json, side_restriction = side.ALL_SIDE) {
 	let side;
 
 	// if the side restriction is false, randomly decide the deck's faction within full range
-	if (side_restriction == side.ALL_SIDE) {
+	if (side_restriction == sideENUM.ALL_SIDE) {
 		side = getRNG(2);
 	}
 	else {
@@ -33,11 +33,11 @@ function randomDeckGen(json, side_restriction = side.ALL_SIDE) {
 
 	// randomly select the nation from selected range
 	switch (side) {
-		case side.BLUFOR:
+		case sideENUM.BLUFOR:
 			console.log('blufor boi');
 			deck += json.Blufor[getRNG(21) - 1];
 
-		case side.REDFOR:
+		case sideENUM.REDFOR:
 			console.log('redfor boi');
 			deck += json.Redfor[getRNG(13) - 1];
 	}
