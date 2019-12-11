@@ -65,13 +65,15 @@ $(function() {
 
 	// check the states of the side restriction toggle switch
 	$('#tgSwitch_blufor').on('change', function() {
-		if ($(this).is(':checked')) {
-			side_restriction = $(this).is(':checked');
-			alert(switchStatus); // To verify
-		}
-		else {
-			side_restriction = $(this).is(':checked');
-			alert(switchStatus); // To verify
+		switch ($(this).is(':checked')) {
+			case true:
+				side_restriction = 1;
+				alert('blufor restriction is applied');
+				break;
+
+			case false:
+				alert('false');
+				break;
 		}
 	});
 
