@@ -36,10 +36,12 @@ function randomDeckGen(json, side_restriction = sideENUM.ALL_SIDE) {
 		case sideENUM.BLUFOR:
 			console.log('blufor boi');
 			deck += json.Blufor[getRNG(21) - 1];
+			break;
 
 		case sideENUM.REDFOR:
 			console.log('redfor boi');
 			deck += json.Redfor[getRNG(13) - 1];
+			break;
 	}
 
 	console.log(deck);
