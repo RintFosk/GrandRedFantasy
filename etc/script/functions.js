@@ -65,14 +65,31 @@ $(function() {
 
 	// check the states of the side restriction toggle switch
 	$('#tgSwitch_blufor').on('change', function() {
+		if ($('#tgSwitch_redfor').is(':checked')) {
+			$('#tgSwitch_redfor').prop('checked', false);
+		}
 		switch ($(this).is(':checked')) {
 			case true:
 				side_restriction = 1;
-				alert('blufor restriction is applied');
 				break;
 
 			case false:
-				alert('false');
+				side_restriction = 0;
+				break;
+		}
+	});
+
+	$('#tgSwitch_redfor').on('change', function() {
+		if ($('#tgSwitch_blufor').is(':checked')) {
+			$('#tgSwitch_blufor').prop('checked', false);
+		}
+		switch ($(this).is(':checked')) {
+			case true:
+				side_restriction = 2;
+				break;
+
+			case false:
+				side_restriction = 0;
 				break;
 		}
 	});
@@ -80,14 +97,19 @@ $(function() {
 	// different button yield different number of random deck
 	$('#gen_button1').click(function() {
 		$.getJSON('etc/data/majsoul_result.json', function(json) {
-			deck = randomDeckGen(json);
+			deck = randomDeckGen(json, side_restriction);
 			document.getElementById('output').innerHTML = deck;
 		});
 	});
 
 	$('#gen_button2').click(function() {
 		$.getJSON('etc/data/majsoul_result.json', function(json) {
-			deck = randomDeckGen(json) + '<br>' + randomDeckGen(json) + '<br>' + randomDeckGen(json);
+			deck =
+				randomDeckGen(json, side_restriction) +
+				'<br>' +
+				randomDeckGen(json, side_restriction) +
+				'<br>' +
+				randomDeckGen(json, side_restriction);
 			document.getElementById('output').innerHTML = deck;
 		});
 	});
@@ -95,25 +117,25 @@ $(function() {
 	$('#gen_button3').click(function() {
 		$.getJSON('etc/data/majsoul_result.json', function(json) {
 			deck =
-				randomDeckGen(json) +
+				randomDeckGen(json, side_restriction) +
 				'<br>' +
-				randomDeckGen(json) +
+				randomDeckGen(json, side_restriction) +
 				'<br>' +
-				randomDeckGen(json) +
+				randomDeckGen(json, side_restriction) +
 				'<br>' +
-				randomDeckGen(json) +
+				randomDeckGen(json, side_restriction) +
 				'<br>' +
-				randomDeckGen(json) +
+				randomDeckGen(json, side_restriction) +
 				'<br>' +
-				randomDeckGen(json) +
+				randomDeckGen(json, side_restriction) +
 				'<br>' +
-				randomDeckGen(json) +
+				randomDeckGen(json, side_restriction) +
 				'<br>' +
-				randomDeckGen(json) +
+				randomDeckGen(json, side_restriction) +
 				'<br>' +
-				randomDeckGen(json) +
+				randomDeckGen(json, side_restriction) +
 				'<br>' +
-				randomDeckGen(json);
+				randomDeckGen(json, side_restriction);
 			document.getElementById('output').innerHTML = deck;
 		});
 	});
