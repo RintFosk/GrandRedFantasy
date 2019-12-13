@@ -105,11 +105,11 @@ $(function () {
 		}
 		switch ($(this).is(':checked')) {
 			case true:
-				side_restriction = 1;
+				side_restriction = 0;
 				break;
 
 			case false:
-				side_restriction = 0;
+				side_restriction = 2;
 				break;
 		}
 	});
@@ -120,11 +120,11 @@ $(function () {
 		}
 		switch ($(this).is(':checked')) {
 			case true:
-				side_restriction = 2;
+				side_restriction = 1;
 				break;
 
 			case false:
-				side_restriction = 0;
+				side_restriction = 2;
 				break;
 		}
 	});
