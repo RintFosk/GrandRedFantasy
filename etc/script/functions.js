@@ -96,7 +96,8 @@ $(function () {
 
 	// Initializing variables
 	let deck = '';
-	let side_restriction = 0;
+	let side_restriction = 2;
+	let era_restriction = 3;
 
 	// check the states of the side restriction toggle switch
 	$('#tgSwitch_blufor').on('change', function () {
@@ -125,6 +126,64 @@ $(function () {
 
 			case false:
 				side_restriction = 2;
+				break;
+		}
+	});
+
+
+	// event listener on click of the era restriction toogle box
+	$('#tgSwitch_EraA').on('change', function () {
+		if ($('#tgSwitch_EraB').is(':checked')) {
+			$('#tgSwitch_EraB').prop('checked', false);
+		}
+		if ($('#tgSwitch_EraC').is(':checked')) {
+			$('#tgSwitch_EraC').prop('checked', false);
+		}
+		switch ($(this).is(':checked')) {
+			case true:
+				era_restriction = 0;
+				break;
+
+			case false:
+				era_restriction = 3;
+				break;
+		}
+	});
+
+	// event listener on click of the era restriction toogle box
+	$('#tgSwitch_EraB').on('change', function () {
+		if ($('#tgSwitch_EraA').is(':checked')) {
+			$('#tgSwitch_EraA').prop('checked', false);
+		}
+		if ($('#tgSwitch_EraC').is(':checked')) {
+			$('#tgSwitch_EraC').prop('checked', false);
+		}
+		switch ($(this).is(':checked')) {
+			case true:
+				era_restriction = 1;
+				break;
+
+			case false:
+				era_restriction = 3;
+				break;
+		}
+	});
+
+	// event listener on click of the era restriction toogle box
+	$('#tgSwitch_EraC').on('change', function () {
+		if ($('#tgSwitch_EraB').is(':checked')) {
+			$('#tgSwitch_EraB').prop('checked', false);
+		}
+		if ($('#tgSwitch_EraA').is(':checked')) {
+			$('#tgSwitch_EraA').prop('checked', false);
+		}
+		switch ($(this).is(':checked')) {
+			case true:
+				era_restriction = 2;
+				break;
+
+			case false:
+				era_restriction = 3;
 				break;
 		}
 	});
