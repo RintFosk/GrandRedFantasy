@@ -6,7 +6,7 @@ const sideENUM = {
 
 function getRNG(max) {
 	/**
-	 * Generate a random integer from 1 to max
+	 * Generate a random integer from 0 to max - 1
 	 */
 	return Math.floor(Math.random() * max) + 1;
 }
@@ -22,7 +22,7 @@ function randomDeckGen(json, side_restriction = sideENUM.ALL_SIDE) {
 
 	// if the side restriction is false, randomly decide the deck's faction within full range
 	if (side_restriction == sideENUM.ALL_SIDE) {
-		side = getRNG(2);
+		side = getRNG(2) + 1;
 	} else {
 		// if the side restriction is on, force the side to be the parameter defined, 1 = blue, 2 = red
 		side = side_restriction;
@@ -34,19 +34,19 @@ function randomDeckGen(json, side_restriction = sideENUM.ALL_SIDE) {
 	switch (side) {
 		case sideENUM.BLUFOR:
 			console.log('blufor boi');
-			deck += json.Blufor[getRNG(21) - 1];
+			deck += json.Blufor[getRNG(21)];
 			break;
 
 		case sideENUM.REDFOR:
 			console.log('redfor boi');
-			deck += json.Redfor[getRNG(13) - 1];
+			deck += json.Redfor[getRNG(13)];
 			break;
 	}
 
 	console.log(deck);
 
 	// add the random deck spec after the nation
-	deck += ' ' + json.DeckSpec[getRNG(6) - 1];
+	deck += ' ' + json.DeckSpec[getRNG(6)];
 
 	return deck;
 }
@@ -141,7 +141,7 @@ $(function () {
 
 	// Dice rolling button
 	$('#roll_dice_button').click(function () {
-		num = getRNG(6);
+		num = getRNG(6) + 1;
 		document.getElementById('output').innerHTML = num;
 	});
 });
