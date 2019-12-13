@@ -191,7 +191,7 @@ $(function () {
 	// different button yield different number of random deck
 	$('#gen_button1').click(function () {
 		$.getJSON('etc/data/faction_and_deckSpec.json', function (json) {
-			deck = deckConfWrap(deckConfGen(json, side_restriction));
+			deck = deckConfWrap(deckConfGen(json, side_restriction, era_restriction));
 			document.getElementById('output').innerHTML = deck;
 			deck = ""
 		});
@@ -200,7 +200,7 @@ $(function () {
 	$('#gen_button2').click(function () {
 		$.getJSON('etc/data/faction_and_deckSpec.json', function (json) {
 			for (i = 0; i < 3; i++) {
-				deck += deckConfWrap(deckConfGen(json, side_restriction));
+				deck += deckConfWrap(deckConfGen(json, side_restriction, era_restriction));
 			}
 			document.getElementById('output').innerHTML = deck;
 			deck = ""
@@ -210,7 +210,7 @@ $(function () {
 	$('#gen_button3').click(function () {
 		$.getJSON('etc/data/faction_and_deckSpec.json', function (json) {
 			for (i = 0; i < 10; i++) {
-				deck += deckConfWrap(deckConfGen(json, side_restriction));
+				deck += deckConfWrap(deckConfGen(json, side_restriction, era_restriction));
 			}
 			document.getElementById('output').innerHTML = deck;
 			deck = ""
