@@ -1,20 +1,20 @@
 const sideENUM = {
-	ALL_SIDE : 0,
-	BLUFOR   : 1,
-	REDFOR   : 2
+	ALL_SIDE: 0,
+	BLUFOR: 1,
+	REDFOR: 2
 };
 
 function getRNG(max) {
 	/**
-     * Generate a random integer from 1 to max
-     */
+	 * Generate a random integer from 1 to max
+	 */
 	return Math.floor(Math.random() * max) + 1;
 }
 
 function randomDeckGen(json, side_restriction = sideENUM.ALL_SIDE) {
 	/**
-     * Generate a random deck combination, faction side restriction is false by default
-     */
+	 * Generate a random deck combination, faction side restriction is false by default
+	 */
 
 	let deck = '';
 	// Need to define what side the deck will be
@@ -23,8 +23,7 @@ function randomDeckGen(json, side_restriction = sideENUM.ALL_SIDE) {
 	// if the side restriction is false, randomly decide the deck's faction within full range
 	if (side_restriction == sideENUM.ALL_SIDE) {
 		side = getRNG(2);
-	}
-	else {
+	} else {
 		// if the side restriction is on, force the side to be the parameter defined, 1 = blue, 2 = red
 		side = side_restriction;
 	}
@@ -52,19 +51,19 @@ function randomDeckGen(json, side_restriction = sideENUM.ALL_SIDE) {
 	return deck;
 }
 
-$(function() {
+$(function () {
 	/**
-     * Jquery stuff
-     * 
-     * Mainly used for button interaction
-     */
+	 * Jquery stuff
+	 * 
+	 * Mainly used for button interaction
+	 */
 
 	// Initializing variables
 	let deck = '';
 	let side_restriction = 0;
 
 	// check the states of the side restriction toggle switch
-	$('#tgSwitch_blufor').on('change', function() {
+	$('#tgSwitch_blufor').on('change', function () {
 		if ($('#tgSwitch_redfor').is(':checked')) {
 			$('#tgSwitch_redfor').prop('checked', false);
 		}
@@ -79,7 +78,7 @@ $(function() {
 		}
 	});
 
-	$('#tgSwitch_redfor').on('change', function() {
+	$('#tgSwitch_redfor').on('change', function () {
 		if ($('#tgSwitch_blufor').is(':checked')) {
 			$('#tgSwitch_blufor').prop('checked', false);
 		}
@@ -95,15 +94,15 @@ $(function() {
 	});
 
 	// different button yield different number of random deck
-	$('#gen_button1').click(function() {
-		$.getJSON('etc/data/majsoul_result.json', function(json) {
+	$('#gen_button1').click(function () {
+		$.getJSON('etc/data/league_nations.json', function (json) {
 			deck = randomDeckGen(json, side_restriction);
 			document.getElementById('output').innerHTML = deck;
 		});
 	});
 
-	$('#gen_button2').click(function() {
-		$.getJSON('etc/data/majsoul_result.json', function(json) {
+	$('#gen_button2').click(function () {
+		$.getJSON('etc/data/league_nations.json', function (json) {
 			deck =
 				randomDeckGen(json, side_restriction) +
 				'<br>' +
@@ -114,8 +113,8 @@ $(function() {
 		});
 	});
 
-	$('#gen_button3').click(function() {
-		$.getJSON('etc/data/majsoul_result.json', function(json) {
+	$('#gen_button3').click(function () {
+		$.getJSON('etc/data/league_nations.json', function (json) {
 			deck =
 				randomDeckGen(json, side_restriction) +
 				'<br>' +
@@ -141,7 +140,7 @@ $(function() {
 	});
 
 	// Dice rolling button
-	$('#roll_dice_button').click(function() {
+	$('#roll_dice_button').click(function () {
 		num = getRNG(6);
 		document.getElementById('output').innerHTML = num;
 	});
