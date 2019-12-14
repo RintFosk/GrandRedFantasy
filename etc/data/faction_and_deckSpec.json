@@ -1,48 +1,94 @@
-{  
-    "Blufor":[  
-       "NATO",
-       "EUROCORPS",
-       "Scandinavia",
-       "Commonwealth",
-       "Blue Dragon",
-       "Landjut",
-       "Norad",
-       "Dutch-German Corp",
-       "US",
-       "UK",
-       "FRANCE",
-       "West-Germany",
-       "Canada",
-       "Denmark",
-       "Sweden",
-       "Norway",
-       "ANZAC",
-       "Japan",
-       "South Korea",
-       "Netherland",
-       "Israel"
-    ],
-    "Redfor":[  
-       "WARSAW",
-       "Eastern Bloc",
-       "Red Dragon",
-       "Polfin",
-       "Entente",
-       "East-Germany",
-       "USSR",
-       "Poland",
-       "Finland",
-       "Yugo",
-       "Czech",
-       "China",
-       "North Korea"
-    ],
-    "DeckSpec":[  
-       "Mechanized",
-       "Armored",
-       "Airborne",
-       "Mortorised",
-       "Marine",
-       "Support"
-    ]
- }
+{
+   "Blufor": [
+      "NATO",
+      "Eurocorp",
+      "Scandinavia",
+      "Commonwealth",
+      "Blue Dragon",
+      "Landjut",
+      "Norad",
+      "Dutch-German Corp",
+      "US",
+      "UK",
+      "FRANCE",
+      "West-Germany",
+      "Canada",
+      "Denmark",
+      "Sweden",
+      "Norway",
+      "ANZAC",
+      "Japan",
+      "South Korea",
+      "Netherland",
+      "Israel"
+   ],
+
+   "Redfor": [
+      "PACT",
+      "Eastern Bloc",
+      "Red Dragon",
+      "Polfin",
+      "Entente",
+      "East-Germany",
+      "USSR",
+      "Poland",
+      "Finland",
+      "Yugo",
+      "Czech",
+      "China",
+      "North Korea"
+   ],
+
+   "ALLIES": [
+      "NATO",
+      "PACT"
+   ],
+
+   "LEAGUES": [
+      "Eurocorp",
+      "Scandinavia",
+      "Commonwealth",
+      "Blue Dragon",
+      "Landjut",
+      "Norad",
+      "Dutch-German Corp",
+      "Eastern Bloc",
+      "Red Dragon",
+      "Polfin",
+      "Entente"
+   ],
+
+   "NATIONS": [
+      "US",
+      "UK",
+      "FRANCE",
+      "West-Germany",
+      "Canada",
+      "Denmark",
+      "Sweden",
+      "Norway",
+      "ANZAC",
+      "Japan",
+      "South Korea",
+      "Netherland",
+      "Israel",
+      "East-Germany",
+      "USSR",
+      "Poland",
+      "Finland",
+      "Yugo",
+      "Czech",
+      "China",
+      "North Korea"
+   ],
+
+   "DeckSpec": [
+      "Mechanized",
+      "Armored",
+      "Airborne",
+      "Mortorised",
+      "Marine",
+      "Support"
+   ]
+
+}

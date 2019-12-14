@@ -18,7 +18,7 @@ function getRNG(max) {
 	return Math.floor(Math.random() * max);
 }
 
-function deckConfGen(json, side_restriction = sideENUM.ALL_SIDE, era_restriction = eraENUM.ALL_ERA) {
+function deckConfGen(jsonDb, side_restriction = sideENUM.ALL_SIDE, era_restriction = eraENUM.ALL_ERA) {
 	/**
 	 * Generate a random deck configuration combination, faction side restriction is false by default
 	 * Contains League/Nation, Specialization and the deck era
@@ -51,22 +51,49 @@ function deckConfGen(json, side_restriction = sideENUM.ALL_SIDE, era_restriction
 	// randomly select the faction from selected range
 	switch (side) {
 		case sideENUM.BLUFOR:
-			faction = json.Blufor[getRNG(21)];
+			faction = jsonDb.Blufor[getRNG(21)];
 			break;
 
 		case sideENUM.REDFOR:
-			faction = json.Redfor[getRNG(13)];
+			faction = jsonDb.Redfor[getRNG(13)];
 			break;
 	}
 
 	// add the random deck spec after the nation
-	spec = json.DeckSpec[getRNG(6)];
+	spec = jsonDb.DeckSpec[getRNG(6)];
 
 	return [faction, spec, era];
 }
 
 
+function getRandomDecks(jsonDb, side_restriction = sideENUM.ALL_SIDE, era_restriction = eraENUM.ALL_ERA, amount = 1) {
+	/**
+	 * get certain number of the random decks
+	 */
+	deck = "";
+	for (i = 0; i < amount; i++) {
+		deck += deckConfWrap(deckConfGen(jsonDb, side_restriction, era_restriction));
+	}
+	document.getElementById('output').innerHTML = deck;
+}
+
+
+function onUniqBtnPressed(mainButton, otherButtons) {
+	/**
+	 * Action which change all the other buttons to unselected state when the main button is pressed
+	 */
+	if (mainButton.is(':checked')) {
+		otherButtons.forEach(function (element) {
+			element.prop('checked', false);
+		});
+	}
+}
+
+
 function deckConfWrap(confArray) {
+	/**
+	 * A wrapper/prettifier for the generated random deck conf 
+	 */
 	output = confArray[0] + ' ' + confArray[1];
 
 	switch (confArray[2]) {
@@ -95,15 +122,18 @@ $(function () {
 	 */
 
 	// Initializing variables
-	let deck = '';
 	let side_restriction = 2;
 	let era_restriction = 3;
 
+	// Initializing the json objects
+	$.getJSON('etc/data/faction_and_deckSpec.json', function (json) {
+		console.log(json);
+		faction_and_deckSpec_json = json;
+	});
+
 	// check the states of the side restriction toggle switch
 	$('#tgSwitch_blufor').on('change', function () {
-		if ($('#tgSwitch_redfor').is(':checked')) {
-			$('#tgSwitch_redfor').prop('checked', false);
-		}
+		onUniqBtnPressed($('#tgSwitch_blufor'), [$('#tgSwitch_redfor')]);
 		switch ($(this).is(':checked')) {
 			case true:
 				side_restriction = 0;
@@ -116,9 +146,7 @@ $(function () {
 	});
 
 	$('#tgSwitch_redfor').on('change', function () {
-		if ($('#tgSwitch_blufor').is(':checked')) {
-			$('#tgSwitch_blufor').prop('checked', false);
-		}
+		onUniqBtnPressed($('#tgSwitch_redfor'), [$('#tgSwitch_blufor')]);
 		switch ($(this).is(':checked')) {
 			case true:
 				side_restriction = 1;
@@ -133,12 +161,7 @@ $(function () {
 
 	// event listener on click of the era restriction toogle box
 	$('#tgSwitch_EraA').on('change', function () {
-		if ($('#tgSwitch_EraB').is(':checked')) {
-			$('#tgSwitch_EraB').prop('checked', false);
-		}
-		if ($('#tgSwitch_EraC').is(':checked')) {
-			$('#tgSwitch_EraC').prop('checked', false);
-		}
+		onUniqBtnPressed($('#tgSwitch_EraA'), [$('#tgSwitch_EraB'), $('#tgSwitch_EraC')]);
 		switch ($(this).is(':checked')) {
 			case true:
 				era_restriction = 0;
@@ -152,12 +175,7 @@ $(function () {
 
 	// event listener on click of the era restriction toogle box
 	$('#tgSwitch_EraB').on('change', function () {
-		if ($('#tgSwitch_EraA').is(':checked')) {
-			$('#tgSwitch_EraA').prop('checked', false);
-		}
-		if ($('#tgSwitch_EraC').is(':checked')) {
-			$('#tgSwitch_EraC').prop('checked', false);
-		}
+		onUniqBtnPressed($('#tgSwitch_EraB'), [$('#tgSwitch_EraA'), $('#tgSwitch_EraC')]);
 		switch ($(this).is(':checked')) {
 			case true:
 				era_restriction = 1;
@@ -171,12 +189,7 @@ $(function () {
 
 	// event listener on click of the era restriction toogle box
 	$('#tgSwitch_EraC').on('change', function () {
-		if ($('#tgSwitch_EraB').is(':checked')) {
-			$('#tgSwitch_EraB').prop('checked', false);
-		}
-		if ($('#tgSwitch_EraA').is(':checked')) {
-			$('#tgSwitch_EraA').prop('checked', false);
-		}
+		onUniqBtnPressed($('#tgSwitch_EraC'), [$('#tgSwitch_EraA'), $('#tgSwitch_EraB')]);
 		switch ($(this).is(':checked')) {
 			case true:
 				era_restriction = 2;
@@ -190,31 +203,15 @@ $(function () {
 
 	// different button yield different number of random deck
 	$('#gen_button1').click(function () {
-		$.getJSON('etc/data/faction_and_deckSpec.json', function (json) {
-			deck = deckConfWrap(deckConfGen(json, side_restriction, era_restriction));
-			document.getElementById('output').innerHTML = deck;
-			deck = ""
-		});
+		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction)
 	});
 
 	$('#gen_button2').click(function () {
-		$.getJSON('etc/data/faction_and_deckSpec.json', function (json) {
-			for (i = 0; i < 3; i++) {
-				deck += deckConfWrap(deckConfGen(json, side_restriction, era_restriction));
-			}
-			document.getElementById('output').innerHTML = deck;
-			deck = ""
-		});
+		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 3)
 	});
 
 	$('#gen_button3').click(function () {
-		$.getJSON('etc/data/faction_and_deckSpec.json', function (json) {
-			for (i = 0; i < 10; i++) {
-				deck += deckConfWrap(deckConfGen(json, side_restriction, era_restriction));
-			}
-			document.getElementById('output').innerHTML = deck;
-			deck = ""
-		});
+		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 10)
 	});
 
 	// Dice rolling button
