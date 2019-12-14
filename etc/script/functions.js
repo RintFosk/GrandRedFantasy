@@ -203,15 +203,15 @@ $(function () {
 
 	// different button yield different number of random deck
 	$('#gen_button1').click(function () {
-		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction)
+		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction);
 	});
 
 	$('#gen_button2').click(function () {
-		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 3)
+		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 3);
 	});
 
 	$('#gen_button3').click(function () {
-		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 10)
+		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 10);
 	});
 
 	// Dice rolling button
