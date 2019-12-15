@@ -83,12 +83,62 @@
    ],
 
    "DeckSpec": [
-      "Mechanized",
+      "",
+      "Support",
+      "Motorised",
       "Armored",
+      "Mechanised",
       "Airborne",
-      "Mortorised",
-      "Marine",
-      "Support"
-   ]
+      "Marine"
+   ],
+
+   "Era": [
+      "",
+      "1985",
+      "1980"
+   ],
+
+   "TranslateTable": {
+      "Support": "SUP",
+      "Motorised": "MOTO",
+      "Armored": "ARM",
+      "Mechanised": "MECH",
+      "Airborne": "AIR",
+      "Marine": "MARINE",
+      "NATO": "0",
+      "PACT": "1",
+      "Eurocorp": ["FRA", "BRD"],
+      "Scandinavia": ["DEN", "NOR", "SWE"],
+      "Commonwealth": ["UK", "CAN", "ANZ"],
+      "Blue Dragon": ["ROK", "JAP"],
+      "Landjut": ["BRD", "DEN"],
+      "Norad": ["USA", "CAN"],
+      "Dutch-German Corp": ["BRD", "NED"],
+      "Eastern Bloc": ["DDR", "POL", "CZS"],
+      "Red Dragon": ["PRC", "DPR"],
+      "Polfin": ["POL", "FIN"],
+      "Entente": ["CZS", "YU"],
+      "US": "USA",
+      "UK": "UK",
+      "FRANCE": "FRA",
+      "West-Germany": "BRD",
+      "Canada": "CAN",
+      "Denmark": "DEN",
+      "Sweden": "SWE",
+      "Norway": "NOR",
+      "ANZAC": "ANZ",
+      "Japan": "JAP",
+      "South Korea": "ROK",
+      "Netherland": "NED",
+      "Israel": "ISR",
+      "East-Germany": "DDR",
+      "USSR": "USS",
+      "Poland": "POL",
+      "Finland": "FIN",
+      "Yugo": "YU",
+      "Czech": "CZS",
+      "China": "PRC",
+      "North Korea": "DPR"
+   }
 
 }

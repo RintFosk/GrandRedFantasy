@@ -5,7 +5,7 @@ const sideENUM = {
 };
 
 const eraENUM = {
-	ERA_A: 0, // 1990
+	ERA_A: 0, // all era
 	ERA_B: 1, // 1985
 	ERA_C: 2, // 1980
 	ALL_ERA: 3
@@ -34,10 +34,10 @@ function deckConfGen(jsonDb, side_restriction = sideENUM.ALL_SIDE, era_restricti
 
 	// if the ERA restriction is false, randomly decide the deck's era within full range
 	if (era_restriction == eraENUM.ALL_ERA) {
-		era = getRNG(3);
+		era = jsonDb.Era[getRNG(3)];
 	} else {
 		// if the side restriction is on, force the side to be the parameter defined
-		era = era_restriction;
+		era = jsonDb.Era[era_restriction];
 	}
 
 	// if the side restriction is false, randomly decide the deck's faction within full range
@@ -60,7 +60,7 @@ function deckConfGen(jsonDb, side_restriction = sideENUM.ALL_SIDE, era_restricti
 	}
 
 	// add the random deck spec after the nation
-	spec = jsonDb.DeckSpec[getRNG(6)];
+	spec = jsonDb.DeckSpec[getRNG(7)];
 
 	return [faction, spec, era];
 }
@@ -94,22 +94,7 @@ function deckConfWrap(confArray) {
 	/**
 	 * A wrapper/prettifier for the generated random deck conf 
 	 */
-	output = confArray[0] + ' ' + confArray[1];
-
-	switch (confArray[2]) {
-		case eraENUM.ERA_A:
-			output += ' 1990';
-			break;
-		case eraENUM.ERA_B:
-			output += ' 1985';
-			break;
-		case eraENUM.ERA_C:
-			output += ' 1980';
-			break;
-	}
-
-	output += "<br>";
-
+	output = confArray[0] + ' ' + confArray[1] + ' ' + confArray[2] + "<br>";
 	return output;
 }
 
