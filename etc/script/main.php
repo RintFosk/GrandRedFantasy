@@ -1,4 +1,11 @@
 <?php
+// Import the general json db
+$url = dirname(__DIR__) . '/data/faction_and_deckSpec.json';
+$generalDB = json_decode(file_get_contents($url), true);
+
+// Import the frame db
+$url = dirname(__DIR__) . '/data/faction_and_deckSpec.json';
+$frameDB = json_decode(file_get_contents($url), true);
 
 /**
  * A switcher that execute corresponding functions when called by other process
@@ -6,32 +13,14 @@
 if (isset($_POST['action']) && !empty($_POST['action'])) {
     $action = $_POST['action'];
     switch ($action) {
-
-        case 'getCardData':
-            $deckConf = $_POST['deck_conf'];
-            $deckFrame = loadFrame($deckConf);
-            break;
-
-
-        case 'getTransportRel':
+        case 'deckGen':
+            $deckConf = $_POST["deckConf"];
+            $rawDBs = getData($deckConf);
     }
 }
 
 
-function loadFrame($deckConf)
-{
-    /**
-     * Load the deck frame base on the deck configuration
-     */
-    $url = dirname(__DIR__) . '/data/deck_spec_distribution.json';
-    $frameDB = json_decode(file_get_contents($url), true);
-    $frame = $frameDB[$deckConf['spec']];
-
-    return $frame;
-}
-
-
-function UnitCardQueryFilling($deckConf)
+function makeQuery_unitCard($deckConf)
 {
     /**
      * Assemble the SQL query code corresponding to the deck configuration 
@@ -39,8 +28,7 @@ function UnitCardQueryFilling($deckConf)
      */
 
     // Import the translation table from the json file
-    $url = dirname(__DIR__) . '/data/faction_and_deckSpec.json';
-    $jsonDb = json_decode(file_get_contents($url), true);
+    global $generalDB;
 
     // Extract the deck configuration info
     $faction = $deckConf['faction'];
@@ -52,7 +40,7 @@ function UnitCardQueryFilling($deckConf)
 
     // ============ FACTION CONFIGURATION ============
     // if it is NATO or PACT deck
-    if (in_array($faction, $jsonDb['ALLIES'])) {
+    if (in_array($faction, $generalDB['ALLIES'])) {
         switch ($faction) {
             case "NATO":
                 $sql .= "LEAGUE = 'BLU' and ";
@@ -63,17 +51,17 @@ function UnitCardQueryFilling($deckConf)
         }
     }
     // if it is a League (composition of multiple nation)
-    elseif (in_array($faction, $jsonDb['LEAGUES'])) {
+    elseif (in_array($faction, $generalDB['LEAGUES'])) {
         $sql .= '(';
-        foreach ($jsonDb['TranslateTable'][$faction] as $nation) {
+        foreach ($generalDB['TranslateTable'][$faction] as $nation) {
             $sql .= "Nation = '{$nation}' or ";
         }
         $sql = substr($sql, 0, -4);
         $sql .= ') and ';
     }
     // if it is Nation
-    elseif (in_array($faction, $jsonDb['NATIONS'])) {
-        $addition = $jsonDb['TranslateTable'][$faction];
+    elseif (in_array($faction, $generalDB['NATIONS'])) {
+        $addition = $generalDB['TranslateTable'][$faction];
         $sql .= "Nation = '{$addition}' and ";
     } else {
         echo "error, unexpected faction";
@@ -81,8 +69,8 @@ function UnitCardQueryFilling($deckConf)
 
     // ============ SPEC CONFIGURATION ============
     // if the spec is not general deck
-    if ($spec != "" and in_array($spec, $jsonDb['DeckSpec'])) {
-        $sql .= "Spec_{$jsonDb['TranslateTable'][$spec]} is true and ";
+    if ($spec != "" and in_array($spec, $generalDB['DeckSpec'])) {
+        $sql .= "Spec_{$generalDB['TranslateTable'][$spec]} is true and ";
     }
 
     // ============ YEAR CONFIGURATION ============
@@ -99,8 +87,11 @@ function UnitCardQueryFilling($deckConf)
 }
 
 
-function trspQueryFilling($baseQ)
+function makeQuery_trspRel($baseQ)
 {
+    /**
+     * fill the query that retrieve all the transport relationship base on the given deck conf
+     */
     $baseQ_cut = substr($baseQ, 30, -1);
     $sql = "SELECT b.* 
             FROM UNIT_CARD as a INNER JOIN UNIT_TRANSPORT_REL as b
@@ -114,7 +105,38 @@ function trspQueryFilling($baseQ)
 }
 
 
-function formatTrspDb($trspDb)
+function formatUnitDb($UnitDb)
+{
+    /**
+     * Format the raw transport relation data into the usable format 
+     */
+
+    global $generalDB;
+    $formatted = array();
+
+    foreach ($generalDB['TABS'] as $tab) {
+        $formatted[$tab] = array();
+    }
+
+    foreach ($UnitDb as $unitCard) {
+        // extremely lazy and unoptimized way to categorize every card into corresponding tab
+        if ($unitCard["transport"] == 1) {
+            continue;
+        }
+
+        foreach ($generalDB['DB_TABS'] as $db_tab) {
+            if ($unitCard[$db_tab] == 1) {
+                array_push($formatted[$generalDB['REL_TABS'][$db_tab]], $unitCard);
+                break;
+            }
+        }
+    }
+
+    return $formatted;
+}
+
+
+function formatTrspDb($trspDb, $unitDb)
 {
     /**
      * Format the raw transport relation data into the usable format 
@@ -124,16 +146,69 @@ function formatTrspDb($trspDb)
     foreach ($trspDb as $trspRel) {
         // if the ID is encountered first time
         if ($currentID != $trspRel["CARD_ID"]) {
+            // get the carrieed Unit's ID
             $currentID = $trspRel["CARD_ID"];
-            $formatted[$currentID] = array($trspRel["TRANSPORT_ID"]);
+            // make a new numeric Array to contain the transport data
+            $formatted[$currentID] = array();
         }
-        // if the ID is encountered
-        else {
-            array_push($formatted[$currentID], $trspRel["TRANSPORT_ID"]);
-        }
+
+        $trsp = makeTrsp($trspRel["TRANSPORT_ID"], $unitDb);
+        array_push($formatted[$currentID], $trsp);
     }
 
     return $formatted;
+}
+
+
+function makeTrsp($trspID, $unitDb)
+{
+    // get the card_limit of this transport
+    foreach ($unitDb as $unitCard) {
+        if ($unitCard["CARD_ID"] == $trspID) {
+            $card_limit = $unitCard["Card_limit"];
+            break;
+        }
+    }
+
+    $trsp = array(
+        "CARD_ID" => $trspID,
+        "Card_limit" => $card_limit
+    );
+
+    return $trsp;
+}
+
+
+function getDeckPoint($deckConf)
+{
+    /**
+     * Calculate the deck's point limit base on the deck configuration
+     */
+    // Import the translation table from the json file
+    global $generalDB;
+
+    $point = 0;
+    $faction = $deckConf["faction"];
+    $year = $deckConf["era"];
+    if (in_array($faction, $generalDB["ALLIES"])) {
+        $point = 45;
+    } elseif (in_array($faction, $generalDB["LEAGUES"])) {
+        $point = 55;
+    } elseif (in_array($faction, $generalDB["NATIONS"])) {
+        $point = 60;
+    } else {
+        echo "nation does not match any record";
+    }
+
+    if ($year == "1985") {
+        $point += 5;
+    } elseif ($year == "1980") {
+        $point += 10;
+    } elseif ($year == "") { } else {
+        echo "era does not match any record";
+    }
+
+    return $point;
 }
 
 
@@ -168,6 +243,8 @@ function getData($deckConf)
 {
     /**
      * Get all the card data and its transport relationship data into the local with the deck configuration
+     * 
+     * return: raw unit card database and transport relationship database
      */
     // Setting up the connection authentication detail
     $servername = "sql261.main-hosting.eu";
@@ -183,36 +260,273 @@ function getData($deckConf)
     }
 
     // retrive unit card data
-    $query = UnitCardQueryFilling($deckConf);
+    $query = makeQuery_unitCard($deckConf);
     $unitCardDb = sql_fetch($conn, $query);
 
     // retrive transport rel data
-    $query = trspQueryFilling($query);
+    $query = makeQuery_trspRel($query);
     $trspRelDb = sql_fetch($conn, $query);
 
     $conn->close();
 
+    print_r(formatTrspDb($trspRelDb, $unitCardDb));
+    // print_r(formatUnitDb($unitCardDb));
+
     return array(
-        "UnitCardDb" => $unitCardDb,
-        "TrspRelDb" => formatTrspDb($trspRelDb)
+        "UnitCard" => $unitCardDb,
+        "TrspRel" => $trspRelDb
     );
 }
 
 
-function deckAssembler($deckFrame, $cardDb, $trspDb)
+function drawCard($cardDb, $trspDb, $tab, $cardRecord)
 {
+    /**
+     * randomly drawing card from the card library
+     * auto delete the entry if the target card is depleted upon drawn
+     * 
+     * return: an associative array that contains the type of the card drawn
+     *         (class3/2/1) and corresponding number of the card
+     */
+
+    $cardSet = array(
+        "class" => 0
+    );
+
+    while (true) {
+        // drawing the top level card
+        $size = count($cardDb[$tab]);
+        // if there is no card under this tab, return an empty string
+        if ($size == 0) {
+            return "";
+        }
+
+        $ind = rand(0, $size - 1);
+        $card = $cardDb[$tab][$ind];
+        $vet = drawVet($card);
+
+        // if it is inf type, then it maybe class2 or class3
+        // because currently ignoring the nav tab, it can only be class2
+        if ($card["inf"] == 1) {
+            // check if there is transport candidate
+            $trsp = drawTrsp($trspDb, $card, $cardRecord);
+            if ($trsp == "") {
+                // if there is no transport candidate left, remove this card from the library, re-draw a new card
+                unset($cardDb[$tab][$ind]);
+                $cardDb[$tab] = array_values($cardDb[$tab]);
+                continue;
+            } else {
+                // if it is class 2
+                $cardSet["class"] = 2;
+                $cardSet["vet"] = $vet;
+                $cardSet["card"] = $card;
+                $cardSet["trsp"] = $trsp;
+                break;
+            }
+        } else {
+            // if it is class 1
+            $cardSet["class"] = 1;
+            $cardSet["vet"] = $vet;
+            $cardSet["card"] = $card;
+            break;
+        }
+    }
+
+    addRecord($card, $cardRecord);
+
+    if (isCardDepleted($card, $cardRecord) == true) {
+        unset($cardDb[$tab][$ind]);
+        $cardDb[$tab] = array_values($cardDb[$tab]);
+    }
+
+    return $card;
+}
+
+
+function drawTrsp($trspDb, $card, $cardRecord)
+{
+    /**
+     * randomly draw transport from the transport relationship database
+     * auto delete the entry if the target card is depleted upon drawn
+     * 
+     * return: an integer string representing the ID of the transport
+     */
+    $size = count($trspDb[$card["CARD_ID"]]);
+    // if the trsp rel for this card is empty, return empty string
+    if ($size == 0) {
+        return "";
+    }
+    $ind = rand(0, $size - 1);
+    $trsp = $trspDb[$card["CARD_ID"]][$ind];
+    addRecord($card, $cardRecord);
+
+    // remove the transport from all the related carried card entry if it is depleted
+    if (isCardDepleted($card, $cardRecord) == true) {
+        foreach ($trspDb as $trspRel) {
+            foreach ($trspRel as $trspCan) {
+                if ($trspCan["CARD_ID"] == $trsp["CARD_ID"]) {
+                    unset($trspCan);
+                    break;
+                }
+            }
+        }
+    }
+
+    return $trsp;
+}
+
+
+function drawVet($card)
+{
+    global $generalDB;
+
+    $vetCans = array();
+
+    foreach ($generalDB["AVAIL"] as $vetTier) {
+        if ($card[$vetTier] != 0) {
+            array_push($vetCans, $generalDB["REL_AVAIL"]["$vetTier"]);
+        }
+    }
+
+    $size = count($vetCans);
+    $ind = rand(0, $size - 1);
+    $vet = $vetCans[$ind];
+
+    return $vet;
+}
+
+
+function isCardDepleted($card, $cardRecord)
+{
+    foreach ($cardRecord as $cardRec) {
+        if ($cardRec["CARD_ID"] == $card["CARD_ID"]) {
+            if ($cardRec["USED"] == $card["Card_limit"]) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+function addRecord($card, $cardRecord)
+{
+    // Check if it is in the record
+    foreach ($cardRecord as $record) {
+        if ($record["CARD_ID"] == $card["CARD_ID"]) {
+            $record["USED"] += 1;
+            return;
+        }
+    }
+    // if it is not in the record, create a new entry
+    $newEntry = array(
+        "CARD_ID" => $card["CARD_ID"],
+        "USED" => 1
+    );
+    array_push($cardRecord, $newEntry);
+    return;
+}
+
+
+function deckAssembler($deckConf)
+{
+    // import the json and raw SQL database
+    global $generalDB, $frameDB, $rawDBs;
+
+    // initialize the formatted unit and transport relation database
+    $cardDb = formatUnitDb($rawDBs["UnitCard"]);
+    $trspDb = formatTrspDb($rawDBs["TrspRel"], $rawDBs["UnitCard"]);
+
+    // import the deck configuration
+    $spec = $deckConf['spec'];
+    $year = $deckConf['era'];
+    $faction = $deckConf['faction'];
+
+    // setting up the quantity of different type of units (by transport):
+    $class1List = array();
+    $class2List = array();
+    $class3List = array();
+
+    // setting up the deck frame and deck point limit base on the deck configuration
+    $frame = $frameDB[$generalDB["TranslateTable"][$spec]];
+    $point = getDeckPoint($deckConf);
+
+    // setting up the empty deck
     $deck = array();
+
+    // setting up the record for drawn card
+    $cardRecord = array();
+
+    // import the list of tabin the game
+    $tabs = $generalDB['TABS'];
+    // setting up the pointer of the deck's tab
+    $tabPointer = array();
+    foreach ($tabs as $tab) {
+        $tabPointer[$tab] = 0;
+    }
+
+    // setting up the deck filling end condition
+    $end = false;
+
+    // ================== DECK GENERATION ==================
     // - Always start from the top tab (LOGI) to place a cv unit into the deck
-
     // - Afterwards, goes down from tab to tab, if it reached the end (in this case it is the air), starts from the top (LOGI) again.
+    while ($end == false) {
+        foreach ($tabs as $tab) {
+            // ================== PRE CHECKING ==================
+            // if no unit left in the library OR filling of the tab is not possible with point limit
+            // pop this tab from the iteration list, skip to next tab
+            if ($frame[$tabPointer[$tab]] >= $point or count($cardDb[$tab]) == 0) {
+                array_pop($tabs, $tab);
+                continue;
+            }
+            // randomly decide if the current tab is going to be filled
+            // if it failed, skip to next tab
+            if (rand(0, 1) == 0) {
+                continue;
+            }
 
-    // - Sub-process is:
-    // - Check if filling of the current slot would exceed the deck point limit, if so, ditch this tab from the tab iteration list and jump to the next tab
-    // - Check if there is unit deployable to the slot, if there is none, ditch this tab from the tab iteration list and jump to the next tab
-    // - Do a randomly roll to decide whether this tab is going to be filled, if no, jump to next tab, if yes:
-    // - Randomly select a unit from the requested result, will need some check such as is the card/transport depleted, if failed check, do a random draw again until a success fill is performed. 
-    // - repeat the tab iteration until there is nothing left in the tab iter-list
+            // ================== CARD DRAWING ==================
+            // randomly choose a card from database
+            $cardDrawn = array();
+            $cardDrawn = drawCard($cardDb, $trspDb, $tab, $cardRecord);
 
+            // if during the check, found that no card can be draw from this tab
+            // remove the tab from iteration and skip to next tab
+            if ($cardDrawn == "") {
+                array_pop($tabs, $tab);
+                continue;
+            }
+
+            // if there is content in the returned card set, record them into the 
+            // corresponding selected card list base on their class
+            if ($cardDrawn["class"] == 2) {
+                // if it is the inf in a transport, then it is a class2 unit
+                array_push($class2List, $cardDrawn);
+            } else if ($cardDrawn["class"] == 1) {
+                // if it is just an independent unit, then it is a class1 unit
+                array_push($class1List, $cardDrawn);
+            } else {
+                echo "ERROR: UNEXPECT CARD SET CLASS";
+            }
+
+            // moving the deck spec frame pointer and reduce the point correspondingly
+            $point -= $frame[$tab][$tabPointer];
+            $tabPointer[$tab] += 1;
+
+            // if there is no tab left in the tab list or no point left, deck generation is finished
+            if (count($tabs) == 0 or $point == 0) {
+                $end = true;
+            }
+        }
+
+        if ($point == 0) {
+            $end = true;
+        }
+    }
 
     return deckEncoder($deck);
 }
@@ -233,10 +547,13 @@ $conf = array(
 );
 
 // echo "start";
-// print_r(loadFrame($conf));
-// getData($conf);
-print_r(getData($conf));
+// print_r(getDeckFrame($conf));
+// print_r(deckPointCalc($conf));
+getData($conf);
+// print_r(getData($conf));
 // print_r($conf);
 
 // $url = dirname(__DIR__) . '/data/faction_and_deckSpec.json';
-// $jsonDb = json_decode(file_get_contents($url), true);
+// $generalDB = json_decode(file_get_contents($url), true);
+
+// formatUnitDb($conf);

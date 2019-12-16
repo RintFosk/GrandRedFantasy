@@ -82,6 +82,58 @@
       "North Korea"
    ],
 
+   "TABS": [
+      "LOG",
+      "INF",
+      "SUP",
+      "TNK",
+      "REC",
+      "VEH",
+      "HEL",
+      "AIR",
+      "NAV"
+   ],
+
+   "DB_TABS": [
+      "TAB_LOG",
+      "TAB_INF",
+      "TAB_SUP",
+      "TAB_TNK",
+      "TAB_REC",
+      "TAB_VEH",
+      "TAB_HEL",
+      "TAB_AIR",
+      "TAB_NAV"
+   ],
+
+   "REL_TABS": {
+      "TAB_LOG": "LOG",
+      "TAB_INF": "INF",
+      "TAB_SUP": "SUP",
+      "TAB_TNK": "TNK",
+      "TAB_REC": "REC",
+      "TAB_VEH": "VEH",
+      "TAB_HEL": "HEL",
+      "TAB_AIR": "AIR",
+      "TAB_NAV": "NAV"
+   },
+
+   "AVAIL": [
+      "Avail1",
+      "Avail2",
+      "Avail3",
+      "Avail4",
+      "Avail5"
+   ],
+
+   "REL_AVAIL": {
+      "Avail1": 0,
+      "Avail2": 1,
+      "Avail3": 2,
+      "Avail4": 3,
+      "Avail5": 4
+   },
+
    "DeckSpec": [
       "",
       "Support",
