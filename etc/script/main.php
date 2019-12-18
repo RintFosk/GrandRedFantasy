@@ -14,11 +14,12 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
     $action = $_POST['action'];
     switch ($action) {
         case 'deckGen':
-            $deckConf = $_POST["deckConf"];
-            $rawDBs = getData($deckConf);
-            $newDeck = deckAssembler($deckConf);
-            echo $newDeck;
+            // $deckConf = $_POST["deckConf"];
             // $rawDBs = getData($deckConf);
+            // $newDeck = deckAssembler($deckConf);
+            // echo $newDeck;
+
+            echo "WTF WHY IS IT NOt WORKIng";
     }
 }
 
@@ -738,24 +739,6 @@ $conf = array(
 // echo "start";
 // print_r(getDeckFrame($conf));
 // print_r(deckPointCalc($conf));
-
-// $exampleCardDb = array(
-//     0 => array(
-//         "CARD_ID" => "114514",
-//         "inf" => "0",
-//         "Name" => "cosmos Senpai",
-//         "Card_limit" => "3",
-//         "TAB_LOG" => "0",
-//         "TAB_INF" => "0",
-//         "TAB_SUP" => "1",
-//         "TAB_TNK" => "0",
-//         "TAB_REC" => "0",
-//         "TAB_VEH" => "0",
-//         "TAB_HEL" => "0",
-//         "TAB_AIR" => "0",
-//         "TAB_NAV" => "0",
-//     ),
-// );
 
 // $rawDBs = getData($conf);
 // $newDeck = deckAssembler($conf);
