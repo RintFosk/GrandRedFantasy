@@ -202,6 +202,8 @@ $(function () {
 	// different button yield different number of random deck
 	$('#gen_button1').click(function () {
 		deckConf = deckConfGen(faction_and_deckSpec_json, side_restriction, era_restriction);
+		deckCode = "";
+		deckInfoHTML = "";
 		console.log(deckConf);
 
 		// objectify the form's input
@@ -215,15 +217,13 @@ $(function () {
 			type: 'post',
 			success: function (response) {
 				deckCode = response;
+				// setting up the html formatted deck conf
+				deckInfoHTML = deckConfWrap(deckConf);
+				deckInfoHTML = deckInfoHTML + deckCode;
+				// print the deck conf and content on the page
+				document.getElementById('output').innerHTML = deckInfoHTML;
 			}
 		});
-
-		// setting up the html formatted deck conf
-		deckInfoHTML = deckConfWrap(deckConf);
-		deckInfoHTML = deckInfoHTML + deckCode;
-		// print the deck conf and content on the page
-		document.getElementById('output').innerHTML = deckInfoHTML;
-
 	});
 
 	$('#gen_button2').click(function () {
