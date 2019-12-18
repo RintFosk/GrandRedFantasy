@@ -217,6 +217,7 @@ $(function () {
 			type: 'post',
 			success: function (response) {
 				deckCode = response;
+				console.log(response);
 				// setting up the html formatted deck conf
 				deckInfoHTML = deckConfWrap(deckConf);
 				deckInfoHTML = deckInfoHTML + deckCode;
@@ -232,26 +233,6 @@ $(function () {
 
 	$('#gen_button3').click(function () {
 		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 10);
-	});
-
-
-	// setting up form submit action
-	$('#form_IP_method').submit(function (e) {
-		e.preventDefault(); // avoid to execute the actual submit of the form.
-
-		// objectify the form's input
-		package = objectifyForm($('#form_IP_method').serializeArray());
-		package.action = 'deckChange_byIP';
-		console.log(package);
-
-		$.ajax({
-			url: 'ip-check.php',
-			data: package,
-			type: 'post',
-			success: function (response) {
-				alert(response); // show response from the php script.
-			}
-		});
 	});
 
 
