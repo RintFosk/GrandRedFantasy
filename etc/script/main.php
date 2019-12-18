@@ -14,8 +14,7 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
     $action = $_POST['action'];
     switch ($action) {
         case 'deckGen':
-            aviwevblasdivbasdv
-            $deckConf = $_POST["deckConf"];
+            $deckConf = $_POST;
             $rawDBs = getData($deckConf);
             $newDeck = deckAssembler($deckConf);
             echo $newDeck;
