@@ -74,6 +74,7 @@ function getRandomDecks(jsonDb, side_restriction = sideENUM.ALL_SIDE, era_restri
 	for (i = 0; i < amount; i++) {
 		deck += deckConfWrap(deckConfGen(jsonDb, side_restriction, era_restriction));
 	}
+
 	document.getElementById('output').innerHTML = deck;
 }
 
@@ -96,6 +97,18 @@ function deckConfWrap(confArray) {
 	 */
 	output = confArray[0] + ' ' + confArray[1] + ' ' + confArray[2] + "<br>";
 	return output;
+}
+
+
+function objectifyDeckConf(deckConf) {
+	//serialize data function
+	var result = {
+		faction: deckConf[0],
+		spec: deckConf[1],
+		era: deckConf[2]
+	};
+
+	return result;
 }
 
 
@@ -188,7 +201,29 @@ $(function () {
 
 	// different button yield different number of random deck
 	$('#gen_button1').click(function () {
-		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction);
+		deckConf = deckConfGen(faction_and_deckSpec_json, side_restriction, era_restriction);
+		console.log(deckConf);
+
+		// objectify the form's input
+		package = objectifyDeckConf(deckConf);
+		package.action = 'deckGen';
+		console.log(package);
+
+		$.ajax({
+			url: '/etc/script/main.php',
+			data: package,
+			type: 'post',
+			success: function (response) {
+				deckCode = response;
+			}
+		});
+
+		// setting up the html formatted deck conf
+		deckInfoHTML = deckConfWrap(deckConf);
+		deckInfoHTML = deckInfoHTML + deckCode;
+		// print the deck conf and content on the page
+		document.getElementById('output').innerHTML = deckInfoHTML;
+
 	});
 
 	$('#gen_button2').click(function () {
@@ -198,6 +233,27 @@ $(function () {
 	$('#gen_button3').click(function () {
 		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 10);
 	});
+
+
+	// setting up form submit action
+	$('#form_IP_method').submit(function (e) {
+		e.preventDefault(); // avoid to execute the actual submit of the form.
+
+		// objectify the form's input
+		package = objectifyForm($('#form_IP_method').serializeArray());
+		package.action = 'deckChange_byIP';
+		console.log(package);
+
+		$.ajax({
+			url: 'ip-check.php',
+			data: package,
+			type: 'post',
+			success: function (response) {
+				alert(response); // show response from the php script.
+			}
+		});
+	});
+
 
 	// Dice rolling button
 	$('#roll_dice_button').click(function () {

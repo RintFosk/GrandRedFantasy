@@ -4,7 +4,7 @@ $url = dirname(__DIR__) . '/data/faction_and_deckSpec.json';
 $generalDB = json_decode(file_get_contents($url), true);
 
 // Import the frame db
-$url = dirname(__DIR__) . '/data/faction_and_deckSpec.json';
+$url = dirname(__DIR__) . '/data/deck_spec_distribution.json';
 $frameDB = json_decode(file_get_contents($url), true);
 
 /**
@@ -15,7 +15,10 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
     switch ($action) {
         case 'deckGen':
             $deckConf = $_POST["deckConf"];
-            $rawDBs = getData($deckConf);
+            $rawDBs = getData($conf);
+            $newDeck = deckAssembler($conf);
+            echo $newDeck;
+            // $rawDBs = getData($deckConf);
     }
 }
 
@@ -64,7 +67,7 @@ function makeQuery_unitCard($deckConf)
         $addition = $generalDB['TranslateTable'][$faction];
         $sql .= "Nation = '{$addition}' and ";
     } else {
-        echo "error, unexpected faction";
+        // echo "error, unexpected faction";
     }
 
     // ============ SPEC CONFIGURATION ============
@@ -197,15 +200,16 @@ function getDeckPoint($deckConf)
     } elseif (in_array($faction, $generalDB["NATIONS"])) {
         $point = 60;
     } else {
-        echo "nation does not match any record";
+        // echo "nation does not match any record";
     }
 
     if ($year == "1985") {
         $point += 5;
     } elseif ($year == "1980") {
         $point += 10;
-    } elseif ($year == "") { } else {
-        echo "era does not match any record";
+    } elseif ($year == "") {
+    } else {
+        // echo "era does not match any record";
     }
 
     return $point;
@@ -232,7 +236,7 @@ function sql_fetch($conn, $query)
             $i++;
         }
     } else {
-        echo "Given deck configuration yield 0 results";
+        // echo "Given deck configuration yield 0 results";
     }
 
     return $db;
@@ -269,7 +273,7 @@ function getData($deckConf)
 
     $conn->close();
 
-    print_r(formatTrspDb($trspRelDb, $unitCardDb));
+    // print_r(formatTrspDb($trspRelDb, $unitCardDb));
     // print_r(formatUnitDb($unitCardDb));
 
     return array(
@@ -279,7 +283,17 @@ function getData($deckConf)
 }
 
 
-function drawCard($cardDb, $trspDb, $tab, $cardRecord)
+function simpfyCard($card)
+{
+    $simp = array(
+        "CARD_ID" => $card["CARD_ID"],
+        "Name" => $card["Name"]
+    );
+    return $simp;
+}
+
+
+function drawCard(&$cardDb, &$trspDb, $tab, &$cardRecord, $condition = array())
 {
     /**
      * randomly drawing card from the card library
@@ -301,9 +315,23 @@ function drawCard($cardDb, $trspDb, $tab, $cardRecord)
             return "";
         }
 
+        // draw card
         $ind = rand(0, $size - 1);
         $card = $cardDb[$tab][$ind];
         $vet = drawVet($card);
+
+        // if there is card restriction
+        if (!empty($condition)) {
+            $matched = true;
+            foreach ($condition as $condition_key => $condition_value) {
+                if ($card[$condition_key] != $condition_value) {
+                    $matched = false;
+                }
+            }
+            if ($matched == false) {
+                continue;
+            }
+        }
 
         // if it is inf type, then it maybe class2 or class3
         // because currently ignoring the nav tab, it can only be class2
@@ -319,7 +347,7 @@ function drawCard($cardDb, $trspDb, $tab, $cardRecord)
                 // if it is class 2
                 $cardSet["class"] = 2;
                 $cardSet["vet"] = $vet;
-                $cardSet["card"] = $card;
+                $cardSet["card"] = simpfyCard($card);
                 $cardSet["trsp"] = $trsp;
                 break;
             }
@@ -327,7 +355,7 @@ function drawCard($cardDb, $trspDb, $tab, $cardRecord)
             // if it is class 1
             $cardSet["class"] = 1;
             $cardSet["vet"] = $vet;
-            $cardSet["card"] = $card;
+            $cardSet["card"] = simpfyCard($card);
             break;
         }
     }
@@ -339,11 +367,11 @@ function drawCard($cardDb, $trspDb, $tab, $cardRecord)
         $cardDb[$tab] = array_values($cardDb[$tab]);
     }
 
-    return $card;
+    return $cardSet;
 }
 
 
-function drawTrsp($trspDb, $card, $cardRecord)
+function drawTrsp(&$trspDb, $card, &$cardRecord)
 {
     /**
      * randomly draw transport from the transport relationship database
@@ -363,12 +391,14 @@ function drawTrsp($trspDb, $card, $cardRecord)
     // remove the transport from all the related carried card entry if it is depleted
     if (isCardDepleted($card, $cardRecord) == true) {
         foreach ($trspDb as $trspRel) {
-            foreach ($trspRel as $trspCan) {
+            foreach ($trspRel as $key => $trspCan) {
                 if ($trspCan["CARD_ID"] == $trsp["CARD_ID"]) {
-                    unset($trspCan);
+                    unset($trspRel[$key]);
+                    $trspRel = array_values($trspRel);
                     break;
                 }
             }
+            unset($trspCan);
         }
     }
 
@@ -400,7 +430,7 @@ function isCardDepleted($card, $cardRecord)
 {
     foreach ($cardRecord as $cardRec) {
         if ($cardRec["CARD_ID"] == $card["CARD_ID"]) {
-            if ($cardRec["USED"] == $card["Card_limit"]) {
+            if ("{$cardRec["USED"]}" == $card["Card_limit"]) {
                 return true;
             } else {
                 return false;
@@ -412,12 +442,12 @@ function isCardDepleted($card, $cardRecord)
 }
 
 
-function addRecord($card, $cardRecord)
+function addRecord($card, &$cardRecord)
 {
     // Check if it is in the record
-    foreach ($cardRecord as $record) {
+    foreach ($cardRecord as $key => $record) {
         if ($record["CARD_ID"] == $card["CARD_ID"]) {
-            $record["USED"] += 1;
+            $cardRecord[$key]["USED"] += 1;
             return;
         }
     }
@@ -440,18 +470,18 @@ function deckAssembler($deckConf)
     $cardDb = formatUnitDb($rawDBs["UnitCard"]);
     $trspDb = formatTrspDb($rawDBs["TrspRel"], $rawDBs["UnitCard"]);
 
-    // import the deck configuration
-    $spec = $deckConf['spec'];
-    $year = $deckConf['era'];
-    $faction = $deckConf['faction'];
-
     // setting up the quantity of different type of units (by transport):
     $class1List = array();
     $class2List = array();
     $class3List = array();
 
     // setting up the deck frame and deck point limit base on the deck configuration
-    $frame = $frameDB[$generalDB["TranslateTable"][$spec]];
+    if ($deckConf['spec'] != "") {
+        $frame = $frameDB[$generalDB["TranslateTable"][$deckConf['spec']]];
+    } else {
+        $frame = $frameDB["GENERAL"];
+    }
+
     $point = getDeckPoint($deckConf);
 
     // setting up the empty deck
@@ -460,29 +490,59 @@ function deckAssembler($deckConf)
     // setting up the record for drawn card
     $cardRecord = array();
 
-    // import the list of tabin the game
+    // import the list of tab in the game
     $tabs = $generalDB['TABS'];
     // setting up the pointer of the deck's tab
     $tabPointer = array();
     foreach ($tabs as $tab) {
         $tabPointer[$tab] = 0;
     }
+    unset($tab);
+
+    // print_r($tabPointer);
+    // print_r($frame);
 
     // setting up the deck filling end condition
     $end = false;
+
+    // no cv in the deck at start
+    $cved = false;
 
     // ================== DECK GENERATION ==================
     // - Always start from the top tab (LOGI) to place a cv unit into the deck
     // - Afterwards, goes down from tab to tab, if it reached the end (in this case it is the air), starts from the top (LOGI) again.
     while ($end == false) {
-        foreach ($tabs as $tab) {
+        $isPopped = false;
+        foreach ($tabs as $key => $tab) {
             // ================== PRE CHECKING ==================
             // if no unit left in the library OR filling of the tab is not possible with point limit
             // pop this tab from the iteration list, skip to next tab
-            if ($frame[$tabPointer[$tab]] >= $point or count($cardDb[$tab]) == 0) {
-                array_pop($tabs, $tab);
+            // echo ("====POINT LIMIT==== the left deck point is {$point} \n");
+            $pop = false;
+            if ($tabPointer[$tab] >= count($frame[$tab])) {
+                // echo ("====POP==== {$tab} tab's slot is depleted \n");
+                $pop = true;
+            } elseif ($frame[$tab][$tabPointer[$tab]] >= $point) {
+                // echo ("====POP==== {$tab} tab's current slot filling would exceed point limit \n");
+                $pop = true;
+            } elseif (count($cardDb[$tab]) == 0) {
+                // echo ("====POP==== {$tab} tab has no unit left \n");
+                $pop = true;
+            }
+
+            if ($pop == true) {
+                if ($isPopped == false) {
+                    // echo ("====POPPING==== \n");
+                    unset($tabs[$key]);
+                    $tabs = array_values($tabs);
+                    $isPopped = true;
+                    // echo ("====POP==== END \n");
+                } else {
+                    // echo ("====POP HALT==== one tab already popped in this iteration \n");
+                }
                 continue;
             }
+
             // randomly decide if the current tab is going to be filled
             // if it failed, skip to next tab
             if (rand(0, 1) == 0) {
@@ -490,14 +550,26 @@ function deckAssembler($deckConf)
             }
 
             // ================== CARD DRAWING ==================
-            // randomly choose a card from database
             $cardDrawn = array();
-            $cardDrawn = drawCard($cardDb, $trspDb, $tab, $cardRecord);
+            // Ensure that first drawn must contain a command unit
+            if ($key == "LOG" and $cved == false) {
+                $condition = array(
+                    "CMD" => "1"
+                );
+                $cardDrawn = drawCard($cardDb, $trspDb, $tab, $cardRecord, $condition);
+                $cved = true;
+            } else {
+                // randomly choose a card from database
+                $cardDrawn = drawCard($cardDb, $trspDb, $tab, $cardRecord);
+            }
 
             // if during the check, found that no card can be draw from this tab
             // remove the tab from iteration and skip to next tab
             if ($cardDrawn == "") {
-                array_pop($tabs, $tab);
+                unset($tabs[$key]);
+                $tabs = array_values($tabs);
+                sleep(1);
+                // echo "++++++++++++++++++++++ CARD IS EMPTY ++++++++++++++++++++++";
                 continue;
             }
 
@@ -510,46 +582,186 @@ function deckAssembler($deckConf)
                 // if it is just an independent unit, then it is a class1 unit
                 array_push($class1List, $cardDrawn);
             } else {
-                echo "ERROR: UNEXPECT CARD SET CLASS";
+                // echo "ERROR: UNEXPECT CARD SET CLASS";
             }
 
             // moving the deck spec frame pointer and reduce the point correspondingly
-            $point -= $frame[$tab][$tabPointer];
+            $point -= $frame[$tab][$tabPointer[$tab]];
             $tabPointer[$tab] += 1;
-
-            // if there is no tab left in the tab list or no point left, deck generation is finished
-            if (count($tabs) == 0 or $point == 0) {
-                $end = true;
-            }
         }
 
-        if ($point == 0) {
+
+        // sleep(0.1);
+        // if there is no tab left in the tab list or no point left, deck generation is finished
+        if ($point == 0 or count($tabs) == 0) {
             $end = true;
         }
+        unset($tab);
     }
 
-    return deckEncoder($deck);
+    // import the result into the deck object
+    $deck['class1'] = $class1List;
+    $deck['class2'] = $class2List;
+    $deck['class3'] = $class3List;
+
+    // print_r($deck);
+    // print_r($cardRecord);
+
+
+    return deckEncoder($deck, $deckConf);
 }
 
 
-function deckEncoder($deck)
+function decimalToBi($value, $max)
 {
+    /**
+     * Convert the decimal value to certain length of binary, with padding if needed
+     */
+    $quantity = decbin($value);
+    $result = "{$quantity}";
+
+    if (strlen($result) < $max) {
+        $padding = '';
+        for ($i = 0; $i < ($max - strlen($result)); $i++) {
+            $padding .= "0";
+        }
+        $result = $padding . $result;
+    }
+
+    return $result;
+}
+
+
+function hexanfy($code)
+{
+    global $generalDB;
+    $encodeForm = array_flip($generalDB["DECODE_TABLE"]);
+    $encoded = "@";
+
+    $num_of_blocks = strlen($code) / 6;
+    // print_r($num_of_blocks);
+    for ($i = 0; $i < $num_of_blocks; $i++) {
+        $part = substr($code, $i * 6, 6);
+        $hexChar = $encodeForm[$part];
+        $encoded .= $hexChar;
+    }
+
+    $suffixInd = 4 - $num_of_blocks % 4;
+    switch ($suffixInd) {
+        case 1:
+            $encoded .= "A";
+            break;
+        case 2:
+            $encoded .= "A=";
+            break;
+        case 3:
+            $encoded .= "A==";
+            break;
+    }
+
+    return $encoded;
+}
+
+
+function deckEncoder($deck, $deckConf)
+{
+    global $generalDB;
     $code = '';
 
-    return $code;
+    // Add the faction code
+    $code .= $generalDB["FACTION_CODE"][$deckConf["faction"]];
+
+    // Add the spec code
+    $code .= $generalDB["SPEC_CODE"][$deckConf["spec"]];
+
+    // Add the era code
+    $code .= $generalDB["ERA_CODE"][$deckConf["era"]];
+
+    // add the code for class 3 card quantity
+    $quantity = decbin(count($deck["class3"]));
+    $code .= decimalToBi($quantity, 4);
+
+    // add the code for class 2 card quantity
+    $quantity = count($deck["class2"]);
+    $code .= decimalToBi($quantity, 5);
+
+    // adding code for class 3 card if there is any
+    // currently not supported
+
+    // adding code for class 2 card if there is any
+    foreach ($deck["class2"] as $key => $class2_card) {
+        $vet = (int) $class2_card["vet"];
+        $unit = (int) $class2_card["card"]["CARD_ID"];
+        $trsp = (int) $class2_card["trsp"]["CARD_ID"];
+
+        $line = "";
+        $line .= decimalToBi($vet, 3);
+        $line .= decimalToBi($unit, 11);
+        $line .= decimalToBi($trsp, 11);
+        $code .= $line;
+    }
+
+    // adding code for class 1 card if there is any
+    foreach ($deck["class1"] as $key => $class1_card) {
+        $vet = (int) $class1_card["vet"];
+        $unit = (int) $class1_card["card"]["CARD_ID"];
+
+        $line = "";
+        $line .= decimalToBi($vet, 3);
+        $line .= decimalToBi($unit, 11);
+        $code .= $line;
+    }
+
+    // add padding so the length of the code is 6n
+    if (strlen($code) % 6 > 0) {
+        $padding = '';
+        for ($i = 0; $i < (6 - (strlen($code) % 6)); $i++) {
+            $padding .= "0";
+        }
+        $code .= $padding;
+    }
+
+    // encode the binary code into the hexan code base on the encode table
+
+
+    // echo hexanfy($code);
+    return hexanfy($code);
 }
 
 
 $conf = array(
-    "faction" => "UK",
-    "spec" => "Motorised",
+    "faction" => "Poland",
+    "spec" => "",
     "era" => ""
 );
 
 // echo "start";
 // print_r(getDeckFrame($conf));
 // print_r(deckPointCalc($conf));
-getData($conf);
+
+// $exampleCardDb = array(
+//     0 => array(
+//         "CARD_ID" => "114514",
+//         "inf" => "0",
+//         "Name" => "cosmos Senpai",
+//         "Card_limit" => "3",
+//         "TAB_LOG" => "0",
+//         "TAB_INF" => "0",
+//         "TAB_SUP" => "1",
+//         "TAB_TNK" => "0",
+//         "TAB_REC" => "0",
+//         "TAB_VEH" => "0",
+//         "TAB_HEL" => "0",
+//         "TAB_AIR" => "0",
+//         "TAB_NAV" => "0",
+//     ),
+// );
+
+// $rawDBs = getData($conf);
+// $newDeck = deckAssembler($conf);
+// print_r($newDeck);
+
+
 // print_r(getData($conf));
 // print_r($conf);
 
