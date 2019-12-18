@@ -14,12 +14,11 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
     $action = $_POST['action'];
     switch ($action) {
         case 'deckGen':
-            // $deckConf = $_POST["deckConf"];
-            // $rawDBs = getData($deckConf);
-            // $newDeck = deckAssembler($deckConf);
-            // echo $newDeck;
-
-            echo "WTF WHY IS IT NOt WORKIng";
+            aviwevblasdivbasdv
+            $deckConf = $_POST["deckConf"];
+            $rawDBs = getData($deckConf);
+            $newDeck = deckAssembler($deckConf);
+            echo $newDeck;
     }
 }
 
@@ -90,7 +89,6 @@ function makeQuery_unitCard($deckConf)
     return $sql;
 }
 
-
 function makeQuery_trspRel($baseQ)
 {
     /**
@@ -107,7 +105,6 @@ function makeQuery_trspRel($baseQ)
 
     return $sql;
 }
-
 
 function formatUnitDb($UnitDb)
 {
@@ -139,7 +136,6 @@ function formatUnitDb($UnitDb)
     return $formatted;
 }
 
-
 function formatTrspDb($trspDb, $unitDb)
 {
     /**
@@ -163,7 +159,6 @@ function formatTrspDb($trspDb, $unitDb)
     return $formatted;
 }
 
-
 function makeTrsp($trspID, $unitDb)
 {
     // get the card_limit of this transport
@@ -181,7 +176,6 @@ function makeTrsp($trspID, $unitDb)
 
     return $trsp;
 }
-
 
 function getDeckPoint($deckConf)
 {
@@ -216,7 +210,6 @@ function getDeckPoint($deckConf)
     return $point;
 }
 
-
 function sql_fetch($conn, $query)
 {
     /**
@@ -242,7 +235,6 @@ function sql_fetch($conn, $query)
 
     return $db;
 }
-
 
 function getData($deckConf)
 {
@@ -283,7 +275,6 @@ function getData($deckConf)
     );
 }
 
-
 function simpfyCard($card)
 {
     $simp = array(
@@ -292,7 +283,6 @@ function simpfyCard($card)
     );
     return $simp;
 }
-
 
 function drawCard(&$cardDb, &$trspDb, $tab, &$cardRecord, $condition = array())
 {
@@ -371,7 +361,6 @@ function drawCard(&$cardDb, &$trspDb, $tab, &$cardRecord, $condition = array())
     return $cardSet;
 }
 
-
 function drawTrsp(&$trspDb, $card, &$cardRecord)
 {
     /**
@@ -406,7 +395,6 @@ function drawTrsp(&$trspDb, $card, &$cardRecord)
     return $trsp;
 }
 
-
 function drawVet($card)
 {
     global $generalDB;
@@ -426,7 +414,6 @@ function drawVet($card)
     return $vet;
 }
 
-
 function isCardDepleted($card, $cardRecord)
 {
     foreach ($cardRecord as $cardRec) {
@@ -441,7 +428,6 @@ function isCardDepleted($card, $cardRecord)
 
     return false;
 }
-
 
 function addRecord($card, &$cardRecord)
 {
@@ -460,7 +446,6 @@ function addRecord($card, &$cardRecord)
     array_push($cardRecord, $newEntry);
     return;
 }
-
 
 function deckAssembler($deckConf)
 {
@@ -612,7 +597,6 @@ function deckAssembler($deckConf)
     return deckEncoder($deck, $deckConf);
 }
 
-
 function decimalToBi($value, $max)
 {
     /**
@@ -631,7 +615,6 @@ function decimalToBi($value, $max)
 
     return $result;
 }
-
 
 function hexanfy($code)
 {
@@ -662,7 +645,6 @@ function hexanfy($code)
 
     return $encoded;
 }
-
 
 function deckEncoder($deck, $deckConf)
 {
@@ -730,25 +712,12 @@ function deckEncoder($deck, $deckConf)
 }
 
 
-$conf = array(
-    "faction" => "Poland",
-    "spec" => "",
-    "era" => ""
-);
-
-// echo "start";
-// print_r(getDeckFrame($conf));
-// print_r(deckPointCalc($conf));
+// $conf = array(
+//     "faction" => "Poland",
+//     "spec" => "",
+//     "era" => ""
+// );
 
 // $rawDBs = getData($conf);
 // $newDeck = deckAssembler($conf);
 // print_r($newDeck);
-
-
-// print_r(getData($conf));
-// print_r($conf);
-
-// $url = dirname(__DIR__) . '/data/faction_and_deckSpec.json';
-// $generalDB = json_decode(file_get_contents($url), true);
-
-// formatUnitDb($conf);
