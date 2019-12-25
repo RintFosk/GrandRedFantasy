@@ -1,3 +1,6 @@
 <?php
-$newDeck = deckAssembler($conf);
-print_r($newDeck);
+$conf = array(
+    "faction" => "Poland",
+    "spec" => "",
+    "era" => ""
+);

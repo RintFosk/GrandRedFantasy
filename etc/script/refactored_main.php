@@ -1,5 +1,39 @@
 <?php
 
+require dirname(__DIR__, 2) . '/vendor/autoload.php';
+
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Formatter\LineFormatter;
+
+// the default date format is "Y-m-d\TH:i:sP"
+$dateFormat = "Y-m-j H:i:s.u";
+// the default output format is "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n"
+$output = "[%datetime%] %channel% - %level_name%: %message% %context%\n";
+// finally, create a formatter
+$formatter = new LineFormatter($output, $dateFormat);
+
+// Create a handler
+file_put_contents(__DIR__ . '/refactor_test.log', "");
+$stream = new StreamHandler(__DIR__ . '/refactor_test.log', Logger::DEBUG);
+$stream->setFormatter($formatter);
+
+// create a log channel
+$logM = new Logger('Master Process');
+$logS = new Logger('SQL');
+$logD = new logger('Deck Generation');
+$logM->pushHandler($stream);
+$logS->pushHandler($stream);
+$logD->pushHandler($stream);
+
+// $logM->pushProcessor(function ($record) {
+//     $record['extra']['dummy'] = 'Hello world!';
+
+//     return $record;
+// });
+
+$logM->info("Logger initialized");
+
 /**
  * Importing the needed translation and dictionary data saved in json
  */
@@ -19,27 +53,12 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
     $action = $_POST['action'];
     switch ($action) {
         case 'deckGen':
+            $logM->info("deck generation command recieved", $_POST);
             $deckConf = $_POST;
-            $rawDBs = getData($deckConf);
-            $newDeck = deckAssembler($deckConf);
-            echo $newDeck;
+            $deck = new Deck($deckConf);
+            echo $deck->getDeckCode();
     }
 }
-
-
-class unitCard
-{
-    /**
-     * Object representing an individual unit card
-     */
-    private $data;
-
-    public function __construct($card)
-    {
-        $this->data = $card;
-    }
-}
-
 
 class CardLibrary
 {
@@ -54,23 +73,12 @@ class CardLibrary
      * - unit-transport relationship database
      */
 
-    // Details for the database connection
-    private $servername;
-    private $username;
-    private $password;
-    private $dbname;
-
     // The container for the cards and the transport relationship
     private $unitCardLib;
     private $unitTrspLib;
 
     public function __construct($deckConf)
     {
-        // initializing the data fetcher with the passed parameter
-        $this->servername = "sql261.main-hosting.eu";
-        $this->username = "u927028504_user";
-        $this->password = "1145141919810";
-        $this->dbname = "u927028504_db";
         $this->fetchData($deckConf);
     }
 
@@ -85,33 +93,40 @@ class CardLibrary
          *         false when the connection failed
          */
 
-        // Create connection
+        global $logM, $logS;
+
+        $logM->info("Start fetching data", $deckConf);
+        $logS->info("setting up connection detail");
+        // Create connection, parameters are: server name, user name, password and database name
         $conn = new mysqli(
-            $this->servername,
-            $this->username,
-            $this->password,
-            $this->dbname
+            "sql261.main-hosting.eu",
+            "u927028504_user",
+            "1145141919810",
+            "u927028504_db"
         );
 
         // Check connection
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
+            $logS->warning("connection to remote SQL failed");
             return false;
         }
+        $logS->info("connection to remote SQL is successful");
 
         // retrive unit card data
+        $logS->info("retriving the card data");
         $query = $this->makeQuery_unitCard($deckConf);
         $this->unitCardLib = $this->sql_fetch($conn, $query);
 
         // retrive transport rel data
+        $logS->info("retriving the transport relation data");
         $query = $this->makeQuery_trspRel($query);
         $this->unitTrspLib = $this->sql_fetch($conn, $query);
 
         // close the connection
+        $logS->info("data fetching complete, closing the connection");
         $conn->close();
-
-        // print_r(formatTrspunitTrspLibitCardLib));
-        // print_r(formatUnitDb($unitCardLib));
+        $logS->info("connection closed");
 
         return true;
     }
@@ -124,6 +139,10 @@ class CardLibrary
          * 
          * return: a numeric array that contains all the data entries from the result
          */
+
+        global $logS;
+
+        $logS->info("SQL fetch called");
 
         // Create an array object to contain the data received from the mysql database
         $db = array();
@@ -139,9 +158,10 @@ class CardLibrary
                 $i++;
             }
         } else {
-            // echo "Given deck configuration yield 0 results";
+            $logS->warning("Given deck configuration yield 0 results");
         }
 
+        $logS->info("SQL fetch finished");
         return $db;
     }
 
@@ -345,6 +365,7 @@ class Deck
     private $deckConf;
     private $cardLib;
     private $trspLib;
+    private $cardRecord = array();
 
     public function __construct($deckConf)
     {
@@ -370,9 +391,10 @@ class Deck
 
     private function deckAssembler()
     {
-        // import the json and frame database
-        global $generalDB, $frameDB;
+        // import the json and frame database and logger
+        global $generalDB, $frameDB, $logD, $logM;
 
+        $logM->info("Deck Assembling start");
         // setting up the empty deck
         $deck = array(
             "class1" => array(),
@@ -389,9 +411,6 @@ class Deck
 
         // get the point limit of this deck configuration
         $point = $this->getDeckPoint();
-
-        // setting up the record for drawn card
-        $cardRecord = array();
 
         // import the list of tab in the game
         $tabs = $generalDB['TABS'];
@@ -412,6 +431,7 @@ class Deck
         // - Always start from the top tab (LOGI) to place a cv unit into the deck
         // - Afterwards, goes down from tab to tab, if it reached the end (in this case it is the air), starts from the top (LOGI) again.
         while ($end == false) {
+            $logD->info("Start tabs checking iteration");
             $isPopped = false;
             foreach ($tabs as $key => $tab) {
                 // ================== PRE CHECKING ==================
@@ -421,44 +441,47 @@ class Deck
                 // this is because that the index only can be refreshed in
                 // next iteration.
                 if ($this->isTabPopping($tabPointer, $frame, $tab, $point)) {
+                    $logD->info("{$tab} tab popping condition met");
                     if ($isPopped == false) {
-                        // echo ("====POPPING==== \n");
+                        $logD->info("no tab has been popped from current iteration, start popping");
                         unset($tabs[$key]);
                         $tabs = array_values($tabs);
                         $isPopped = true;
-                        // echo ("====POP==== END \n");
                     } else {
-                        // echo ("====POP HALT==== one tab already popped in this iteration \n");
+                        $logD->info("a tab has been popped during current iteration, stop popping");
                     }
-                    continue;
+                    $logD->info("skipping to next tab iteration");
+                    break;
                 }
 
                 // randomly decide if the current tab is going to be filled
                 // if it failed, skip to next tab
                 if (rand(0, 1) == 0) {
+                    $logD->info("{$tab} is skipped");
                     continue;
+                } else {
+                    $logD->info("drawing card for {$tab} tab");
                 }
 
                 // ================== CARD DRAWING ==================
                 $cardDrawn = array();
                 // Ensure that first drawn must contain a command unit
                 if ($key == "LOG" and $cved == false) {
+                    $logD->debug("no cv in the deck, draw a cv card into the LOG tab");
                     $condition = array(
                         "CMD" => "1"
                     );
-                    $cardDrawn = $this->drawCard($tab, $cardRecord, $condition);
+                    $cardDrawn = $this->drawCard($tab, $condition);
                     $cved = true;
                 } else {
                     // randomly choose a card from database
-                    $cardDrawn = $this->drawCard($tab, $cardRecord);
+                    $cardDrawn = $this->drawCard($tab);
                 }
 
                 // if during the check, found that no card can be draw from this tab
                 // remove the tab from iteration and skip to next tab
                 if ($cardDrawn == "") {
-                    unset($tabs[$key]);
-                    $tabs = array_values($tabs);
-                    // echo "++++++++++++++++++++++ CARD IS EMPTY ++++++++++++++++++++++";
+                    $logD->warning("The card drawn is empty, cancel the filling sequence");
                     continue;
                 }
 
@@ -479,15 +502,17 @@ class Deck
                 $tabPointer[$tab] += 1;
             }
 
-            // sleep(0.1);
+
             // if there is no tab left in the tab list or no point left, deck generation is finished
             if ($point == 0 or count($tabs) == 0) {
+                $logM->info("deck generation complete");
                 $end = true;
             }
             unset($tab);
         }
-        // print_r($deck);
-        // print_r($cardRecord);
+        $logM->debug("printing the final unitRecord", $this->cardRecord);
+        $logM->debug("printing the final card library", $this->cardLib);
+        $logM->debug("printing the final card library", $this->trspLib);
 
 
         return $deck;
@@ -499,20 +524,21 @@ class Deck
          * detect if the current tab needed to be popped from the tab list
          * or not
          */
+        global $logD;
 
         // if the tab's slot is depleted
         if ($tabPointer[$tab] >= count($frame[$tab])) {
-            // echo ("====POP==== {$tab} tab's slot is depleted \n");
+            $logD->info("==POP MET== {$tab} tab's slot is depleted");
             return true;
         }
         // if the filling of the tab would exceed the point limit
         elseif ($frame[$tab][$tabPointer[$tab]] >= $point) {
-            // echo ("====POP==== {$tab} tab's current slot filling would exceed point limit \n");
+            $logD->info("==POP MET== {$tab} tab's current slot filling would exceed point limit");
             return true;
         }
         // if the current tab has no unit
         elseif (count($this->cardLib[$tab]) == 0) {
-            // echo ("====POP==== {$tab} tab has no unit left \n");
+            $logD->info("==POP MET== {$tab} tab has no unit left");
             return true;
         } else {
             return false;
@@ -525,7 +551,7 @@ class Deck
          * Calculate the deck's point limit base on the deck configuration
          */
         // Import the translation table from the json file
-        global $generalDB;
+        global $generalDB, $logD;
 
         $point = 0;
         $faction = $this->deckConf["faction"];
@@ -537,7 +563,7 @@ class Deck
         } elseif (in_array($faction, $generalDB["NATIONS"])) {
             $point = 60;
         } else {
-            // echo "nation does not match any record";
+            $logD->warning("faction does not match any record");
         }
 
         if ($year == "1985") {
@@ -546,7 +572,7 @@ class Deck
             $point += 10;
         } elseif ($year == "") {
         } else {
-            // echo "era does not match any record";
+            $logD->warning("era does not match any record");
         }
 
         return $point;
@@ -561,7 +587,7 @@ class Deck
         return $simp;
     }
 
-    private function drawCard($tab, &$cardRecord, $condition = array())
+    private function drawCard($tab, $condition = array())
     {
         /**
          * randomly drawing card from the card library
@@ -570,6 +596,8 @@ class Deck
          * return: an associative array that contains the type of the card drawn
          *         (class3/2/1) and corresponding number of the card
          */
+        global $logD;
+        $logD->info("start card drawing");
 
         $cardSet = array(
             "class" => 0
@@ -580,6 +608,7 @@ class Deck
             $size = count($this->cardLib[$tab]);
             // if there is no card under this tab, return an empty string
             if ($size == 0) {
+                $logD->info("no card under this {$tab} tab");
                 return "";
             }
 
@@ -590,14 +619,19 @@ class Deck
 
             // if there is card restriction
             if (!empty($condition)) {
+                $logD->debug("condition check triggered", $condition);
                 $matched = true;
                 foreach ($condition as $condition_key => $condition_value) {
                     if ($card[$condition_key] != $condition_value) {
                         $matched = false;
                     }
                 }
+
                 if ($matched == false) {
+                    $logD->debug("condition check failed");
                     continue;
+                } else {
+                    $logD->debug("condition check passed");
                 }
             }
 
@@ -605,8 +639,10 @@ class Deck
             // because currently ignoring the nav tab, it can only be class2
             if ($card["inf"] == 1) {
                 // check if there is transport candidate
-                $trsp = $this->drawTrsp($card, $cardRecord);
+                $logD->info("the drawn card is inf type, a trsp card is need to be drawn");
+                $trsp = $this->drawTrsp($card);
                 if ($trsp == "") {
+                    $logD->warning("there is no transport candidate left!, remove the card from library and redraw a new card", $this->simpfyCard($card));
                     // if there is no transport candidate left, remove this card from the library, re-draw a new card
                     unset($this->cardLib[$tab][$ind]);
                     $this->cardLib[$tab] = array_values($this->cardLib[$tab]);
@@ -617,6 +653,7 @@ class Deck
                     $cardSet["vet"] = $vet;
                     $cardSet["card"] = $this->simpfyCard($card);
                     $cardSet["trsp"] = $trsp;
+                    $logD->info("class 2 card drawn", $cardSet);
                     break;
                 }
             } else {
@@ -624,21 +661,23 @@ class Deck
                 $cardSet["class"] = 1;
                 $cardSet["vet"] = $vet;
                 $cardSet["card"] = $this->simpfyCard($card);
+                $logD->info("class 1 card drawn", $cardSet);
                 break;
             }
         }
 
-        $this->addRecord($card, $cardRecord);
+        $this->addRecord($card);
 
-        if ($this->isCardDepleted($card, $cardRecord) == true) {
+        if ($this->isCardDepleted($card) == true) {
             unset($this->cardLib[$tab][$ind]);
             $this->cardLib[$tab] = array_values($this->cardLib[$tab]);
         }
 
+        $logD->info("card drawing complete");
         return $cardSet;
     }
 
-    private function drawTrsp($card, &$cardRecord)
+    private function drawTrsp($card)
     {
         /**
          * randomly draw transport from the transport relationship database
@@ -646,6 +685,9 @@ class Deck
          * 
          * return: an integer string representing the ID of the transport
          */
+        global $logD;
+        $logD->info("start drawing transport");
+
         $size = count($this->trspLib[$card["CARD_ID"]]);
         // if the trsp rel for this card is empty, return empty string
         if ($size == 0) {
@@ -653,21 +695,30 @@ class Deck
         }
         $ind = rand(0, $size - 1);
         $trsp = $this->trspLib[$card["CARD_ID"]][$ind];
-        $this->addRecord($card, $cardRecord);
+
+
+        $logD->info("adding the trsp into the record");
+        $this->addRecord($trsp);
+        $logD->debug("current record", $this->cardRecord);
 
         // remove the transport from all the related carried card entry if it is depleted
-        if ($this->isCardDepleted($card, $cardRecord) == true) {
+        if ($this->isCardDepleted($trsp) == true) {
+            $logD->debug("current transport is depleted, deleting all the related trsp relation", $trsp);
             foreach ($this->trspLib as $trspRel) {
                 foreach ($trspRel as $key => $trspCan) {
                     if ($trspCan["CARD_ID"] == $trsp["CARD_ID"]) {
+                        $logD->info("deleting related entry");
+                        $logD->debug("before", $trspRel);
                         unset($trspRel[$key]);
                         $trspRel = array_values($trspRel);
+                        $logD->debug("after", $trspRel);
                         break;
                     }
                 }
                 unset($trspCan);
             }
         }
+        $logD->info("transport drawing completed");
 
         return $trsp;
     }
@@ -691,11 +742,14 @@ class Deck
         return $vet;
     }
 
-    private function isCardDepleted($card, $cardRecord)
+    private function isCardDepleted($card)
     {
-        foreach ($cardRecord as $cardRec) {
+        global $logD;
+
+        foreach ($this->cardRecord as $cardRec) {
             if ($cardRec["CARD_ID"] == $card["CARD_ID"]) {
                 if ("{$cardRec["USED"]}" == $card["Card_limit"]) {
+                    $logD->info("This card is depleted", array($card["CARD_ID"], $card["Name"]));
                     return true;
                 } else {
                     return false;
@@ -706,12 +760,12 @@ class Deck
         return false;
     }
 
-    private function addRecord($card, &$cardRecord)
+    private function addRecord($card)
     {
         // Check if it is in the record
-        foreach ($cardRecord as $key => $record) {
+        foreach ($this->cardRecord as $key => $record) {
             if ($record["CARD_ID"] == $card["CARD_ID"]) {
-                $cardRecord[$key]["USED"] += 1;
+                $this->cardRecord[$key]["USED"] += 1;
                 return;
             }
         }
@@ -720,7 +774,7 @@ class Deck
             "CARD_ID" => $card["CARD_ID"],
             "USED" => 1
         );
-        array_push($cardRecord, $newEntry);
+        array_push($this->cardRecord, $newEntry);
         return;
     }
 }
@@ -852,16 +906,18 @@ class DeckEncoder
         return $this->hexfy($code);
     }
 }
-// ================ deck encoding ===============
 
+$conf = array(
+    "faction" => "Poland",
+    "spec" => "",
+    "era" => ""
+);
 
-
-
-// $conf = array(
-//     "faction" => "Poland",
-//     "spec" => "",
-//     "era" => ""
-// );
+$logM->info("deck generation test");
+$deck = new Deck($conf);
+$DCode = $deck->getDeckCode();
+$logM->info("deck code generation complete", array($DCode));
+print_r($DCode);
 
 // $rawDBs = getData($conf);
 // $newDeck = deckAssembler($conf);
