@@ -706,7 +706,7 @@ class Deck
         // remove the transport from all the related carried card entry if it is depleted
         if ($this->isCardDepleted($trsp) == true) {
             $logD->debug("current transport is depleted, deleting all the related trsp relation", $trsp);
-            foreach ($this->trspLib as $trspRel) {
+            foreach ($this->trspLib as &$trspRel) {
                 foreach ($trspRel as $key => $trspCan) {
                     if ($trspCan["CARD_ID"] == $trsp["CARD_ID"]) {
                         $logD->info("deleting related entry");
