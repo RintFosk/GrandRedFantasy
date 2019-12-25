@@ -56,7 +56,9 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             $logM->info("deck generation command recieved", $_POST);
             $deckConf = $_POST;
             $deck = new Deck($deckConf);
-            echo $deck->getDeckCode();
+            $DCode = $deck->getDeckCode();
+            $logM->info("deck code generation complete", array($DCode));
+            echo $DCode;
     }
 }
 
@@ -211,10 +213,10 @@ class CardLibrary
         if (in_array($faction, $generalDB['ALLIES'])) {
             switch ($faction) {
                 case "NATO":
-                    $sql .= "LEAGUE = 'BLU' and ";
+                    $sql .= "LEAGUE = 'BLU' and Prototype = 0 and ";
                     break;
                 case "PACT":
-                    $sql .= "LEAGUE = 'RED' and ";
+                    $sql .= "LEAGUE = 'RED' and Prototype = 0 and ";
                     break;
             }
         }
@@ -907,17 +909,17 @@ class DeckEncoder
     }
 }
 
-$conf = array(
-    "faction" => "Poland",
-    "spec" => "",
-    "era" => ""
-);
+// $conf = array(
+//     "faction" => "Poland",
+//     "spec" => "",
+//     "era" => ""
+// );
 
-$logM->info("deck generation test");
-$deck = new Deck($conf);
-$DCode = $deck->getDeckCode();
-$logM->info("deck code generation complete", array($DCode));
-print_r($DCode);
+// $logM->info("deck generation test");
+// $deck = new Deck($conf);
+// $DCode = $deck->getDeckCode();
+// $logM->info("deck code generation complete", array($DCode));
+// print_r($DCode);
 
 // $rawDBs = getData($conf);
 // $newDeck = deckAssembler($conf);

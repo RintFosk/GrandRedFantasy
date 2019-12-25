@@ -213,10 +213,10 @@ class CardLibrary
         if (in_array($faction, $generalDB['ALLIES'])) {
             switch ($faction) {
                 case "NATO":
-                    $sql .= "LEAGUE = 'BLU' and ";
+                    $sql .= "LEAGUE = 'BLU' and Prototype = 0 and ";
                     break;
                 case "PACT":
-                    $sql .= "LEAGUE = 'RED' and ";
+                    $sql .= "LEAGUE = 'RED' and Prototype = 0 and ";
                     break;
             }
         }
