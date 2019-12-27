@@ -112,8 +112,10 @@ function objectifyDeckConf(deckConf) {
 }
 
 
-function requestRandomDeck() {
+function requestRandomDeck(restriction_set) {
 	// deck generating message
+	side_restriction = restriction_set[0];
+	era_restriction = restriction_set[1];
 	loadingMsg = 'Generating deck...';
 	document.getElementById('output').innerHTML = loadingMsg;
 
@@ -233,7 +235,8 @@ $(function () {
 
 	// different button yield different number of random deck
 	$('#gen_button1').click(function () {
-		requestRandomDeck();
+		restriction_set = [side_restriction, era_restriction];
+		requestRandomDeck(restriction_set);
 	});
 
 	$('#gen_button2').click(function () {
