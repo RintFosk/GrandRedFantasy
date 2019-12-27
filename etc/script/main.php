@@ -329,7 +329,8 @@ class CardLibrary
 
         $baseQ_cut = substr($baseQ, 30, -1);
 
-        if (in_array($deckConf["faction"], $generalDB['Allies'])) {
+        // Minor difference for the query if the faction is either NATO or PACT
+        if (in_array($deckConf["faction"], $generalDB['ALLIES'])) {
             $sql = "SELECT b.* 
             FROM UNIT_CARD as a INNER JOIN UNIT_TRANSPORT_REL as b
             ON b.LEAGUE = a.LEAGUE and b.CARD_ID = a.CARD_ID
