@@ -70,12 +70,22 @@ function getRandomDecks(jsonDb, side_restriction = sideENUM.ALL_SIDE, era_restri
 	/**
 	 * get certain number of the random decks
 	 */
-	deck = "";
+	let deck_output = "";
+	let deckConf_set = [];
 	for (i = 0; i < amount; i++) {
-		deck += deckConfWrap(deckConfGen(jsonDb, side_restriction, era_restriction));
+		deck = deckConfGen(jsonDb, side_restriction, era_restriction);
+		deck_obj = {
+			faction: deck[0],
+			spec: deck[1],
+			era: deck[2]
+		};
+		deck_output += deckConfWrap(deck);
+		deckConf_set.push(deck_obj);
 	}
 
-	document.getElementById('output').innerHTML = deck;
+	document.getElementById('output').innerHTML = deck_output;
+
+	return deckConf_set;
 }
 
 
@@ -95,38 +105,25 @@ function deckConfWrap(confArray) {
 	/**
 	 * A wrapper/prettifier for the generated random deck conf 
 	 */
-	output = confArray[0] + ' ' + confArray[1] + ' ' + confArray[2] + "<br>";
+	let output = confArray[0] + ' ' + confArray[1] + ' ' + confArray[2] + "<br>";
 	return output;
 }
 
 
-function objectifyDeckConf(deckConf) {
-	//serialize data function
-	var result = {
-		faction: deckConf[0],
-		spec: deckConf[1],
-		era: deckConf[2]
-	};
-
-	return result;
-}
-
-
-function requestRandomDeck(restriction_set) {
+function requestRandomDeck(deckConf_set) {
 	// deck generating message
-	side_restriction = restriction_set[0];
-	era_restriction = restriction_set[1];
-	loadingMsg = 'Generating deck...';
+	let loadingMsg = 'Generating deck...';
+	let deckCode = "";
+	let deckInfoHTML = "";
+
+	console.log(deckConf_set);
 	document.getElementById('output').innerHTML = loadingMsg;
 
-	deckConf = deckConfGen(faction_and_deckSpec_json, side_restriction, era_restriction);
-	deckCode = "";
-	deckInfoHTML = "";
-	console.log(deckConf);
-
 	// objectify the form's input
-	package = objectifyDeckConf(deckConf);
-	package.action = 'deckGen';
+	let package = {
+		'deckConf_set': deckConf_set,
+		'action': 'deckGen'
+	};
 	console.log(package);
 
 	$.ajax({
@@ -235,22 +232,24 @@ $(function () {
 
 	// different button yield different number of random deck
 	$('#gen_button1').click(function () {
-		restriction_set = [side_restriction, era_restriction];
-		requestRandomDeck(restriction_set);
+		let deckConf_set = getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 1);
+		requestRandomDeck(deckConf_set);
 	});
 
 	$('#gen_button2').click(function () {
-		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 3);
+		let deckConf_set = getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 3);
+		requestRandomDeck(deckConf_set);
 	});
 
 	$('#gen_button3').click(function () {
-		getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 10);
+		let deckConf_set = getRandomDecks(faction_and_deckSpec_json, side_restriction, era_restriction, 10);
+		requestRandomDeck(deckConf_set);
 	});
 
 
 	// Dice rolling button
 	$('#roll_dice_button').click(function () {
-		num = getRNG(6) + 1;
+		let num = getRNG(6) + 1;
 		document.getElementById('output').innerHTML = num;
 	});
 });

@@ -54,11 +54,54 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
     switch ($action) {
         case 'deckGen':
             $logM->info("deck generation command recieved", $_POST);
-            $deckConf = $_POST;
-            $deck = new Deck($deckConf);
-            $DCode = $deck->getDeckCode();
+            $deckConf_set = $_POST;
+            $deck = new DeckFactory();
+            $DCode = $deck->getDecks($deckConf_set);
             $logM->info("deck code generation complete", array($DCode));
             echo $DCode;
+            break;
+    }
+}
+
+class DeckFactory
+{
+    function getDecks($deckConf_set)
+    {
+        /**
+         * main function that fetch all the unit card and unit-transport
+         * relationship data that matched with the given deck configuration
+         * from the target mysql database
+         * 
+         * return: true when the fetching completed
+         *         false when the connection failed
+         */
+
+        global $logM, $logS;
+        $deckSetOutput = "";
+
+        $logM->info("Start deck set generation", $deckConf_set);
+        $cardLibrary = new CardLibrary();
+
+        // initiate the database connection
+        $cardLibrary->startConn();
+
+        foreach ($deckConf_set as $deckConf) {
+            $cardLibrary->fetchData($deckConf);
+            $unitCardLib = $cardLibrary->getUnitLib();
+            $trspCardLib = $cardLibrary->getTrspLib();
+
+            $deck = new Deck($deckConf, $unitCardLib, $trspCardLib);
+            $deckCode = $deck->getDeckCode();
+            $deckConf_output = "{$deckConf['faction']} {$deckConf['spec']} {$deckConf['era']}<br>";
+            $deckSetOutput .= $deckConf_output . $deckCode . "<br>";
+        }
+
+        // close the connection
+        $cardLibrary->closeConn();
+        $logS->info("Deck set generation complete");
+
+
+        return $deckSetOutput;
     }
 }
 
@@ -78,10 +121,40 @@ class CardLibrary
     // The container for the cards and the transport relationship
     private $unitCardLib;
     private $unitTrspLib;
+    private $conn;
 
-    public function __construct($deckConf)
+    public function startConn()
     {
-        $this->fetchData($deckConf);
+        global $logS;
+
+
+        $logS->info("setting up connection detail");
+        // Create connection, parameters are: server name, user name, password and database name
+        $this->conn = new mysqli(
+            "sql261.main-hosting.eu",
+            "u927028504_user",
+            "1145141919810",
+            "u927028504_db"
+        );
+
+        // Check connection
+        if ($this->conn->connect_error) {
+            die("Connection failed: " . $this->conn->connect_error);
+            $logS->warning("connection to remote SQL failed");
+            return false;
+        }
+        $logS->info("connection to remote SQL is successful");
+    }
+
+    public function closeConn()
+    {
+        global $logS;
+
+        $logS->info("closing the connection");
+        $this->conn->close();
+        $logS->info("connection closed");
+
+        return true;
     }
 
     public function fetchData($deckConf)
@@ -96,39 +169,22 @@ class CardLibrary
          */
 
         global $logM, $logS;
+        $this->unitCardLib = array();
+        $this->unitTrspLib = array();
 
         $logM->info("Start fetching data", $deckConf);
-        $logS->info("setting up connection detail");
-        // Create connection, parameters are: server name, user name, password and database name
-        $conn = new mysqli(
-            "sql261.main-hosting.eu",
-            "u927028504_user",
-            "1145141919810",
-            "u927028504_db"
-        );
-
-        // Check connection
-        if ($conn->connect_error) {
-            die("Connection failed: " . $conn->connect_error);
-            $logS->warning("connection to remote SQL failed");
-            return false;
-        }
-        $logS->info("connection to remote SQL is successful");
-
         // retrive unit card data
         $logS->info("retriving the card data");
         $query = $this->makeQuery_unitCard($deckConf);
-        $this->unitCardLib = $this->sql_fetch($conn, $query);
+        $this->unitCardLib = $this->sql_fetch($this->conn, $query);
 
         // retrive transport rel data
         $logS->info("retriving the transport relation data");
         $query = $this->makeQuery_trspRel($query);
-        $this->unitTrspLib = $this->sql_fetch($conn, $query);
+        $this->unitTrspLib = $this->sql_fetch($this->conn, $query);
 
         // close the connection
-        $logS->info("data fetching complete, closing the connection");
-        $conn->close();
-        $logS->info("connection closed");
+        $logS->info("data fetching");
 
         return true;
     }
@@ -144,10 +200,11 @@ class CardLibrary
 
         global $logS;
 
-        $logS->info("SQL fetch called");
+        $logS->info("SQL fetch called", array($query));
 
         // Create an array object to contain the data received from the mysql database
         $db = array();
+
 
         // Send the query through the connection
         $result = $conn->query($query);
@@ -272,7 +329,7 @@ class CardLibrary
         $sql = "SELECT b.* 
             FROM UNIT_CARD as a INNER JOIN UNIT_TRANSPORT_REL as b
             ON b.LEAGUE = a.LEAGUE and b.CARD_ID = a.CARD_ID
-            WHERE {$baseQ_cut} and
+            WHERE a.{$baseQ_cut} and
                 b.TRANSPORT_ID in (SELECT CARD_ID FROM UNIT_CARD
                 WHERE {$baseQ_cut})";
 
@@ -369,17 +426,14 @@ class Deck
     private $trspLib;
     private $cardRecord = array();
 
-    public function __construct($deckConf)
+    public function __construct($deckConf, $cardLib, $trspLib)
     {
         // save the deck conf as local variable first
         $this->deckConf = $deckConf;
 
-        // initiate a data fetcher object
-        $library = new CardLibrary($this->deckConf);
-
         // initialize the formatted unit and transport relation database
-        $this->cardLib = $library->getUnitLib();
-        $this->trspLib = $library->getTrspLib();
+        $this->cardLib = $cardLib;
+        $this->trspLib = $trspLib;
 
         // generate the deck
         $this->deck = $this->deckAssembler();
@@ -690,6 +744,11 @@ class Deck
         global $logD;
         $logD->info("start drawing transport");
 
+        // if the given card already out of the trsp library
+        if (!array_key_exists($card["CARD_ID"], $this->trspLib)) {
+            return "";
+        }
+
         $size = count($this->trspLib[$card["CARD_ID"]]);
         // if the trsp rel for this card is empty, return empty string
         if ($size == 0) {
@@ -751,7 +810,7 @@ class Deck
         foreach ($this->cardRecord as $cardRec) {
             if ($cardRec["CARD_ID"] == $card["CARD_ID"]) {
                 if ("{$cardRec["USED"]}" == $card["Card_limit"]) {
-                    $logD->info("This card is depleted", array($card["CARD_ID"], $card["Name"]));
+                    $logD->info("This card is depleted", array($card["CARD_ID"]));
                     return true;
                 } else {
                     return false;
@@ -909,18 +968,26 @@ class DeckEncoder
     }
 }
 
-// $conf = array(
-//     "faction" => "Poland",
-//     "spec" => "",
-//     "era" => ""
+// $conf_set = array(
+//     array(
+//         "faction" => "Poland",
+//         "spec" => "",
+//         "era" => ""
+//     ),
+//     array(
+//         "faction" => "PACT",
+//         "spec" => "",
+//         "era" => "1985"
+//     ),
+//     array(
+//         "faction" => "NATO",
+//         "spec" => "",
+//         "era" => "1980"
+//     )
 // );
 
 // $logM->info("deck generation test");
-// $deck = new Deck($conf);
-// $DCode = $deck->getDeckCode();
+// $deck = new DeckFactory();
+// $DCode = $deck->getDecks($conf_set);
 // $logM->info("deck code generation complete", array($DCode));
 // print_r($DCode);
-
-// $rawDBs = getData($conf);
-// $newDeck = deckAssembler($conf);
-// print_r($newDeck);
