@@ -180,7 +180,7 @@ class CardLibrary
 
         // retrive transport rel data
         $logS->info("retriving the transport relation data");
-        $query = $this->makeQuery_trspRel($query);
+        $query = $this->makeQuery_trspRel($query, $deckConf);
         $this->unitTrspLib = $this->sql_fetch($this->conn, $query);
 
         // close the connection
@@ -314,7 +314,7 @@ class CardLibrary
         return $sql;
     }
 
-    private function makeQuery_trspRel($baseQ)
+    private function makeQuery_trspRel($baseQ, $deckConf)
     {
         /**
          * fill the query that retrieve all the transport relationships 
@@ -325,13 +325,26 @@ class CardLibrary
          */
 
         // only get the post WHERE clause
+        global $generalDB;
+
         $baseQ_cut = substr($baseQ, 30, -1);
-        $sql = "SELECT b.* 
+
+        if (in_array($deckConf["faction"], $generalDB['Allies'])) {
+            $sql = "SELECT b.* 
             FROM UNIT_CARD as a INNER JOIN UNIT_TRANSPORT_REL as b
             ON b.LEAGUE = a.LEAGUE and b.CARD_ID = a.CARD_ID
             WHERE a.{$baseQ_cut} and
                 b.TRANSPORT_ID in (SELECT CARD_ID FROM UNIT_CARD
                 WHERE {$baseQ_cut})";
+        } else {
+            $sql = "SELECT b.* 
+            FROM UNIT_CARD as a INNER JOIN UNIT_TRANSPORT_REL as b
+            ON b.LEAGUE = a.LEAGUE and b.CARD_ID = a.CARD_ID
+            WHERE {$baseQ_cut} and
+                b.TRANSPORT_ID in (SELECT CARD_ID FROM UNIT_CARD
+                WHERE {$baseQ_cut})";
+        }
+
 
 
         return $sql;
