@@ -534,7 +534,7 @@ class Deck
             return true;
         }
         // if the filling of the tab would exceed the point limit
-        elseif ($frame[$tab][$tabPointer[$tab]] >= $point) {
+        elseif ($frame[$tab][$tabPointer[$tab]] > $point) {
             $logD->info("==POP MET== {$tab} tab's current slot filling would exceed point limit");
             return true;
         }
