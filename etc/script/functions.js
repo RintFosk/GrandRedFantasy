@@ -201,7 +201,8 @@ $(function () {
 
 	// different button yield different number of random deck
 	$('#gen_button1').click(function () {
-		document.getElementById('output').innerHTML = "Generating Deck...";
+		loadingMsg = 'Generating deck...';
+		document.getElementById('output').innerHTML = loadingMsg;
 
 		deckConf = deckConfGen(faction_and_deckSpec_json, side_restriction, era_restriction);
 		deckCode = "";
@@ -226,9 +227,7 @@ $(function () {
 				// print the deck conf and content on the page
 				document.getElementById('output').innerHTML = deckInfoHTML;
 			}
-		});
-
-		document.getElementById('output').innerHTML = "OFFTI TEST";
+		});\
 	});
 
 	$('#gen_button2').click(function () {
