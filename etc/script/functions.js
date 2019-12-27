@@ -227,6 +227,8 @@ $(function () {
 				document.getElementById('output').innerHTML = deckInfoHTML;
 			}
 		});
+
+		document.getElementById('output').innerHTML = "OFFTI TEST";
 	});
 
 	$('#gen_button2').click(function () {
