@@ -211,6 +211,8 @@ $(function () {
 		package.action = 'deckGen';
 		console.log(package);
 
+		document.getElementById('output').innerHTML = "Generating Deck...";
+
 		$.ajax({
 			url: '/etc/script/main.php',
 			data: package,
