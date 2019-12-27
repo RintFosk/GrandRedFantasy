@@ -4,44 +4,123 @@
 <head>
   <!-- Importing the needed JS libraries -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+  </script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.js"></script>
   <script src="etc/script/functions.js"></script>
   <meta charset="utf-8">
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   <title>longlong</title>
+  <style>
+    body {
+      padding-top: 60px;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        padding-top: 0;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <a>version 1.2</a>
-  <button id="roll_dice_button">掷骰子</button>
-  <br>
-  <!-- Option to restrict specfici side's deck to be generated -->
-  <label class="switch">
-    BLUFOR
-    <input type="checkbox" id="tgSwitch_blufor">
-  </label>
-  <label class="switch">
-    REDFOR
-    <input type="checkbox" id="tgSwitch_redfor">
-  </label>
-  <br>
-  <label class="switch">
-    No Era Restrict
-    <input type="checkbox" id="tgSwitch_EraA">
-  </label>
-  <label class="switch">
-    1985
-    <input type="checkbox" id="tgSwitch_EraB">
-  </label>
-  <label class="switch">
-    1980
-    <input type="checkbox" id="tgSwitch_EraC">
-  </label>
-  <br>
-  <!-- Main Buttons -->
-  <button id="gen_button1">单抽</button>
-  <button id="gen_button2">三连</button>
-  <button id="gen_button3">十连！</button>
-  <!-- Field reserved for the deck output -->
-  <p id="output"> </p>
+  <div class="container">
+    <!-- Option to restrict specfici side's deck to be generated -->
+    <div class="row ml-3 mr-3">
+      <h5>Deck Side</h5>
+    </div>
+    <div class="row mt-2 ml-3 mr-3">
+
+      <div class="col-2">
+        <div class="custom-control custom-checkbox">
+          <input type="checkbox" class="custom-control-input" id="tgSwitch_blufor">
+          <label class="custom-control-label" for="tgSwitch_blufor">Only Blufor</label>
+        </div>
+      </div>
+
+      <div class="col-2">
+        <div class="custom-control custom-checkbox">
+          <input type="checkbox" class="custom-control-input" id="tgSwitch_redfor">
+          <label class="custom-control-label" for="tgSwitch_redfor">Only Redfor</label>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main Buttons -->
+    <div class="row mt-4 ml-3 mr-3">
+      <h5>Deck Era</h5>
+    </div>
+    <div class="row mt-2 ml-3 mr-3">
+
+      <div class="col-2">
+        <div class="custom-control custom-checkbox">
+          <input type="checkbox" class="custom-control-input" id="tgSwitch_EraA">
+          <label class="custom-control-label" for="tgSwitch_EraA">No Restriction</label>
+        </div>
+      </div>
+
+      <div class="col-2">
+        <div class="custom-control custom-checkbox">
+          <input type="checkbox" class="custom-control-input" id="tgSwitch_EraB">
+          <label class="custom-control-label" for="tgSwitch_EraB">1985 Deck</label>
+        </div>
+      </div>
+
+      <div class="col-2">
+        <div class="custom-control custom-checkbox">
+          <input type="checkbox" class="custom-control-input" id="tgSwitch_EraC">
+          <label class="custom-control-label" for="tgSwitch_EraC">1980 Deck</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deck Gen button -->
+    <div class="row mt-4 ml-3 mr-3">
+      <h5>Deck Generation</h5>
+    </div>
+
+    <div class="row ml-3 mt-2">
+
+      <div class="col-2">
+        <button id="gen_button1">Single Deck Gen</button>
+      </div>
+
+      <div class="col-2">
+        <button id="gen_button2">Triple Deck Gen</button>
+      </div>
+
+      <div class="col-2">
+        <button id="gen_button3">Ultimate Deck pack</button>
+      </div>
+
+      <!-- <div class="col-2">
+        <button id="roll_dice_button">roll the dice</button>
+      </div> -->
+    </div>
+
+    <!-- Field reserved for the deck output -->
+    <div class="row mt-4 ml-3 mr-3">
+      <h5>Deck Result:</h5>
+    </div>
+
+    <div class="row mt-3 ml-3 mr-3">
+      <p id="output"> </p>
+    </div>
+
+    <div class="row ml-3 mr-3">
+      <a>version 1.2.1</a>
+    </div>
+
+
+  </div>
+
+
+
 </body>
 
 </html>
