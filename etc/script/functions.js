@@ -227,7 +227,7 @@ $(function () {
 				// print the deck conf and content on the page
 				document.getElementById('output').innerHTML = deckInfoHTML;
 			}
-		});\
+		});
 	});
 
 	$('#gen_button2').click(function () {
