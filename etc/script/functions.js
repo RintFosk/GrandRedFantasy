@@ -201,6 +201,8 @@ $(function () {
 
 	// different button yield different number of random deck
 	$('#gen_button1').click(function () {
+		document.getElementById('output').innerHTML = "Generating Deck...";
+
 		deckConf = deckConfGen(faction_and_deckSpec_json, side_restriction, era_restriction);
 		deckCode = "";
 		deckInfoHTML = "";
@@ -210,8 +212,6 @@ $(function () {
 		package = objectifyDeckConf(deckConf);
 		package.action = 'deckGen';
 		console.log(package);
-
-		document.getElementById('output').innerHTML = "Generating Deck...";
 
 		$.ajax({
 			url: '/etc/script/main.php',
