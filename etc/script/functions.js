@@ -112,6 +112,38 @@ function objectifyDeckConf(deckConf) {
 }
 
 
+function requestRandomDeck() {
+	// deck generating message
+	loadingMsg = 'Generating deck...';
+	document.getElementById('output').innerHTML = loadingMsg;
+
+	deckConf = deckConfGen(faction_and_deckSpec_json, side_restriction, era_restriction);
+	deckCode = "";
+	deckInfoHTML = "";
+	console.log(deckConf);
+
+	// objectify the form's input
+	package = objectifyDeckConf(deckConf);
+	package.action = 'deckGen';
+	console.log(package);
+
+	$.ajax({
+		url: '/etc/script/main.php',
+		data: package,
+		type: 'post',
+		success: function (response) {
+			deckCode = response;
+			console.log(response);
+			// setting up the html formatted deck conf
+			deckInfoHTML = deckConfWrap(deckConf);
+			deckInfoHTML = deckInfoHTML + deckCode;
+			// print the deck conf and content on the page
+			document.getElementById('output').innerHTML = deckInfoHTML;
+		}
+	});
+}
+
+
 $(function () {
 	/**
 	 * Jquery stuff
@@ -201,33 +233,7 @@ $(function () {
 
 	// different button yield different number of random deck
 	$('#gen_button1').click(function () {
-		loadingMsg = 'Generating deck...';
-		document.getElementById('output').innerHTML = loadingMsg;
-
-		deckConf = deckConfGen(faction_and_deckSpec_json, side_restriction, era_restriction);
-		deckCode = "";
-		deckInfoHTML = "";
-		console.log(deckConf);
-
-		// objectify the form's input
-		package = objectifyDeckConf(deckConf);
-		package.action = 'deckGen';
-		console.log(package);
-
-		$.ajax({
-			url: '/etc/script/main.php',
-			data: package,
-			type: 'post',
-			success: function (response) {
-				deckCode = response;
-				console.log(response);
-				// setting up the html formatted deck conf
-				deckInfoHTML = deckConfWrap(deckConf);
-				deckInfoHTML = deckInfoHTML + deckCode;
-				// print the deck conf and content on the page
-				document.getElementById('output').innerHTML = deckInfoHTML;
-			}
-		});
+		requestRandomDeck();
 	});
 
 	$('#gen_button2').click(function () {
