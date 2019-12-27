@@ -54,7 +54,7 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
     switch ($action) {
         case 'deckGen':
             $logM->info("deck generation command recieved", $_POST);
-            $deckConf_set = $_POST;
+            $deckConf_set = $_POST["deckConf_set"];
             $deck = new DeckFactory();
             $DCode = $deck->getDecks($deckConf_set);
             $logM->info("deck code generation complete", array($DCode));
