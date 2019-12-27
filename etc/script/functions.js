@@ -131,13 +131,7 @@ function requestRandomDeck(deckConf_set) {
 		data: package,
 		type: 'post',
 		success: function (response) {
-			deckCode = response;
-			console.log(response);
-			// setting up the html formatted deck conf
-			deckInfoHTML = deckConfWrap(deckConf);
-			deckInfoHTML = deckInfoHTML + deckCode;
-			// print the deck conf and content on the page
-			document.getElementById('output').innerHTML = deckInfoHTML;
+			document.getElementById('output').innerHTML = response;
 		}
 	});
 }
