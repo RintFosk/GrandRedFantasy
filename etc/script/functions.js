@@ -60,7 +60,19 @@ function deckConfGen(jsonDb, side_restriction = sideENUM.ALL_SIDE, era_restricti
 	}
 
 	// add the random deck spec after the nation
-	spec = jsonDb.DeckSpec[getRNG(7)];
+	while (true) {
+		spec = jsonDb.DeckSpec[getRNG(7)];
+		if (spec == "Marine" && jsonDb.NO_MARINE.includes(faction)) {
+			continue;
+		} else if (spec == "Airborne" && jsonDb.NO_AIRBORNE.includes(faction)) {
+			continue;
+		} else if (spec == "Motorised" && jsonDb.NO_MOTOR.includes(faction)) {
+			continue;
+		} else {
+			break;
+		}
+	}
+
 
 	return [faction, spec, era];
 }

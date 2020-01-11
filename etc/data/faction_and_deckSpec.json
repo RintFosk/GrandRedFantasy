@@ -193,6 +193,32 @@
       "North Korea": "DPR"
    },
 
+   "NO_MARINE": [
+      "West-Germany",
+      "Canada",
+      "Denmark",
+      "Sweden",
+      "Norway",
+      "ANZAC",
+      "Japan",
+      "Netherland",
+      "Landjut",
+      "Dutch-Germany Corp",
+      "East-Germany",
+      "Czech"
+   ],
+
+   "NO_AIRBORNE": [
+      "Denmark",
+      "Sweden",
+      "Netherland",
+      "Finland"
+   ],
+
+   "NO_MOTOR": [
+      "Denmark"
+   ],
+
    "DECODE_TABLE": {
       "A": "000000",
       "B": "000001",
